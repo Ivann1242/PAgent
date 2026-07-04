@@ -1,0 +1,14 @@
+{
+  "baseline_em": 0.125,
+  "oracle_em": 0.5,
+  "headroom": 0.375,
+  "per_action_em": {
+    "baseline": 0.5,
+    "careful_reading": 0.375,
+    "step_by_step": 0.375,
+    "format_first": 0.5,
+    "reject_unsupported": 0.5,
+    "type_aware": 0.5
+  },
+  "pass": true
+}

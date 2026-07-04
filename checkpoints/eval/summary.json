@@ -1,0 +1,56 @@
+{
+  "live_baseline": {
+    "em": 0.46875,
+    "format_accuracy": 0.765625,
+    "avg_reward": 0.5218750000000001,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 64
+    },
+    "per_action_em": {
+      "baseline": 0.46875
+    },
+    "n": 64
+  },
+  "router": {
+    "em": 0.5,
+    "format_accuracy": 0.78125,
+    "avg_reward": 0.55625,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "type_aware": 39,
+      "step_by_step": 22,
+      "format_first": 2,
+      "careful_reading": 1
+    },
+    "per_action_em": {
+      "careful_reading": 0.0,
+      "step_by_step": 0.6818181818181818,
+      "format_first": 0.0,
+      "type_aware": 0.4358974358974359
+    },
+    "n": 64
+  },
+  "oracle": {
+    "em": 0.578125,
+    "format_accuracy": 0.9375,
+    "avg_reward": 0.665625,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 46,
+      "careful_reading": 10,
+      "step_by_step": 5,
+      "format_first": 2,
+      "reject_unsupported": 1
+    },
+    "per_action_em": {
+      "baseline": 0.5217391304347826,
+      "careful_reading": 0.6,
+      "step_by_step": 1.0,
+      "format_first": 0.5,
+      "reject_unsupported": 1.0
+    },
+    "n": 64
+  },
+  "router_vs_live_baseline": 0.03125
+}

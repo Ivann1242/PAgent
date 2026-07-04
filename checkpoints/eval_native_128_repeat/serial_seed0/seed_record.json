@@ -1,0 +1,13 @@
+{
+  "label": "serial_seed0_run1",
+  "mode": "serial (eval-workers=1)",
+  "protocol": "native",
+  "n": 128,
+  "live_baseline_em": 0.4140625,
+  "router_em": 0.4375,
+  "delta_pp": 2.34375,
+  "router_only_correct": 11,
+  "baseline_only_correct": 8,
+  "mcnemar_p": 0.6476058959960938,
+  "note": "First repeat-eval run before parallel eval; preserved before restart."
+}

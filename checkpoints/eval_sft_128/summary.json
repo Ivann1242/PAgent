@@ -1,0 +1,32 @@
+{
+  "protocol": "native",
+  "live_baseline": {
+    "em": 0.4453125,
+    "format_accuracy": 0.7109375,
+    "avg_reward": 0.4453125,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 128
+    },
+    "per_action_em": {
+      "baseline": 0.4453125
+    },
+    "n": 128
+  },
+  "router": {
+    "em": 0.4296875,
+    "format_accuracy": 0.6875,
+    "avg_reward": 0.4296875,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 118,
+      "careful_reading": 10
+    },
+    "per_action_em": {
+      "baseline": 0.4661016949152542,
+      "careful_reading": 0.0
+    },
+    "n": 128
+  },
+  "router_vs_live_baseline": -0.015625
+}

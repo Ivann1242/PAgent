@@ -1,0 +1,26 @@
+% DAPO native-protocol paired repeat eval (free-form SFT prompt optimizer).
+% Requires: \usepackage{booktabs}, \usepackage{xcolor}
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\caption{Paired native-protocol evaluation on 128 DAPO-Math test samples (\textbf{free-form SFT} prompt optimizer).
+Each of four runs evaluates live baseline (GPT-OSS-20B, no hint) and the trained Qwen3-4B free-form router on the same split in one session ($T{=}0$, workers$=8$).
+Live baseline mean $\pm$ std follows the prior action-router repeat protocol ($n{=}4$); FF SFT router statistics are from the current four repeats.}
+\label{tab:dapo-ff-sft-native-repeat}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric} & \textbf{Mean} & \textbf{Std} \\
+\midrule
+Live baseline EM            & 42.58\% & $\pm 3.9$ pp \\
+FF SFT router EM            & 50.20\% & $\pm 1.4$ pp \\
+$\Delta$ EM (router $-$ baseline) & \textcolor{green!60!black}{$+7.62$ pp} & \textcolor{green!60!black}{$\pm 1.4$ pp} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25em}
+{\scriptsize
+McNemar on pooled discordant pairs across four FF-SFT runs: router-only correct $=51$, baseline-only correct $=26$, $p=0.006$.
+Random/Oracle references (64 samples, native): $50.00\%$ / $57.81\%$.
+}
+\end{table}

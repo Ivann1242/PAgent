@@ -1,0 +1,71 @@
+{
+  "protocol": "paper",
+  "baseline": {
+    "em": 0.125,
+    "format_accuracy": 0.0,
+    "avg_reward": 0.125,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 64
+    },
+    "per_action_em": {
+      "baseline": 0.125
+    },
+    "n": 64
+  },
+  "live_baseline": {
+    "em": 0.34375,
+    "format_accuracy": 0.625,
+    "avg_reward": 0.34375,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 64
+    },
+    "per_action_em": {
+      "baseline": 0.34375
+    },
+    "n": 64
+  },
+  "router": {
+    "em": 0.34375,
+    "format_accuracy": 0.609375,
+    "avg_reward": 0.34375,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "type_aware": 39,
+      "step_by_step": 22,
+      "format_first": 2,
+      "careful_reading": 1
+    },
+    "per_action_em": {
+      "careful_reading": 0.0,
+      "step_by_step": 0.45454545454545453,
+      "format_first": 0.0,
+      "type_aware": 0.3076923076923077
+    },
+    "n": 64
+  },
+  "oracle": {
+    "em": 0.5625,
+    "format_accuracy": 0.75,
+    "avg_reward": 0.5625,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 54,
+      "step_by_step": 3,
+      "format_first": 4,
+      "careful_reading": 2,
+      "type_aware": 1
+    },
+    "per_action_em": {
+      "baseline": 0.48148148148148145,
+      "careful_reading": 1.0,
+      "step_by_step": 1.0,
+      "format_first": 1.0,
+      "type_aware": 1.0
+    },
+    "n": 64
+  },
+  "router_vs_baseline": 0.21875,
+  "router_vs_live_baseline": 0.0
+}

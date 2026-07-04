@@ -1,0 +1,11 @@
+{
+  "pairs_file": "/home/ivaning/PAgent/checkpoints/label_2048/dpo_pairs.jsonl",
+  "n_train": 4798,
+  "n_val": 252,
+  "epochs": 1,
+  "batch_size": 2,
+  "grad_accum": 8,
+  "lr": 5e-07,
+  "beta": 0.1,
+  "loss": "standard_dpo"
+}

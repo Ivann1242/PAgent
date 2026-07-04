@@ -1,0 +1,22 @@
+{
+  "protocol": "native",
+  "router": {
+    "em": 0.4453125,
+    "format_accuracy": 0.703125,
+    "avg_reward": 0.4453125,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "type_aware": 100,
+      "step_by_step": 22,
+      "format_first": 4,
+      "careful_reading": 2
+    },
+    "per_action_em": {
+      "careful_reading": 0.0,
+      "step_by_step": 0.5454545454545454,
+      "format_first": 0.5,
+      "type_aware": 0.43
+    },
+    "n": 128
+  }
+}

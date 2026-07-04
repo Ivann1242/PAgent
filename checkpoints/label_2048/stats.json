@@ -1,0 +1,38 @@
+{
+  "n_questions": 2048,
+  "n_rollouts": 12288,
+  "n_actions": 6,
+  "categories": {
+    "all_correct": 797,
+    "signal": 759,
+    "all_wrong": 492
+  },
+  "signal_rate": 0.37060546875,
+  "all_correct_rate": 0.38916015625,
+  "all_wrong_rate": 0.240234375,
+  "n_labels": 759,
+  "label_action_distribution": {
+    "baseline": 410,
+    "step_by_step": 111,
+    "careful_reading": 146,
+    "reject_unsupported": 32,
+    "format_first": 37,
+    "type_aware": 23
+  },
+  "per_action_em": {
+    "baseline": 0.58935546875,
+    "careful_reading": 0.5556640625,
+    "step_by_step": 0.6298828125,
+    "format_first": 0.61181640625,
+    "reject_unsupported": 0.60986328125,
+    "type_aware": 0.57275390625
+  },
+  "data_file": "/home/ivaning/PAgent/data/train.jsonl",
+  "answer_urls": [
+    "http://127.0.0.1:8006/v1",
+    "http://127.0.0.1:8007/v1",
+    "http://127.0.0.1:8008/v1"
+  ],
+  "workers": 32,
+  "protocol": "native"
+}

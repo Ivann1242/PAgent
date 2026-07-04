@@ -1,0 +1,9 @@
+{
+  "labels_file": "/home/ivaning/PAgent/checkpoints/label_2048/ff_labels.jsonl",
+  "n_train": 684,
+  "n_val": 75,
+  "epochs": 3,
+  "batch_size": 8,
+  "lr": 2e-05,
+  "mode": "freeform_sft"
+}

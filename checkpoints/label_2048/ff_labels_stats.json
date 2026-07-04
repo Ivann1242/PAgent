@@ -1,0 +1,6 @@
+{
+  "n": 759,
+  "labels_file": "/home/ivaning/PAgent/checkpoints/label_2048/labels.jsonl",
+  "out_file": "/home/ivaning/PAgent/checkpoints/label_2048/ff_labels.jsonl",
+  "empty_hint": 410
+}

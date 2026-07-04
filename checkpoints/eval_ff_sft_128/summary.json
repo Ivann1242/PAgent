@@ -1,0 +1,41 @@
+{
+  "protocol": "native",
+  "baseline": {
+    "em": 0.1484375,
+    "format_accuracy": 0.0,
+    "avg_reward": 0.1484375,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 128
+    },
+    "per_action_em": {
+      "baseline": 0.1484375
+    },
+    "n": 128
+  },
+  "live_baseline": {
+    "em": 0.46875,
+    "format_accuracy": 0.7578125,
+    "avg_reward": 0.46875,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 128
+    },
+    "per_action_em": {
+      "baseline": 0.46875
+    },
+    "n": 128
+  },
+  "ff_router": {
+    "em": 0.4921875,
+    "format_accuracy": 0.8125,
+    "avg_reward": 0.4921875,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "freeform": 128
+    },
+    "per_action_em": {},
+    "n": 128
+  },
+  "ff_router_vs_live_baseline": 0.0234375
+}

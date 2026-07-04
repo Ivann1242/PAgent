@@ -1,0 +1,31 @@
+% DAPO native-protocol action-router results (training v2).
+% Requires: \usepackage{booktabs}, \usepackage{xcolor}
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Lightweight DAPO action-router reproduction on 128 test samples (native protocol), \textbf{training v2}.
+Qwen3-4B router is trained with LoRA + GRPO ($128$ train steps, group size $K{=}8$, RLOO advantage, EM-primary reward);
+the frozen answerer is GPT-OSS-20B.
+$\Delta$ reports ours minus each row (EM, pp).}
+\label{tab:dapo-router-native-v2}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Method} & \textbf{EM} & \textbf{$\Delta$ EM} \\
+\midrule
+GPT-OSS-20B direct (no hint)$^\ast$   & 39.84 & \textcolor{green!60!black}{+4.69} \\
+Random action$^\dagger$              & 50.00 & \textcolor{red!70!black}{$-5.47$} \\
+Oracle action$^\dagger$              & 57.81 & \textcolor{red!70!black}{$-13.28$} \\
+Prompt-R1 cached baseline$^\ddagger$  & 14.84 & \textcolor{green!60!black}{+29.69} \\
+\midrule
+\textbf{Ours: native router (v2)}     & \textbf{44.53} & \textbf{0.00} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25em}
+{\scriptsize
+$^\ast$Live baseline on the same 128-question native split (\texttt{Final Answer:}, $T{=}0$); measured in a prior paired eval run.
+$^\dagger$Random/Oracle: native protocol, 64 samples (128-run pending).
+$^\ddagger$Paper Table-2 protocol ($\langle\texttt{answer}\rangle$, $T{=}0.7$, cached \texttt{res.json}).
+}
+\end{table}

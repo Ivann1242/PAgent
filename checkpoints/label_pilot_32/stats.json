@@ -1,0 +1,29 @@
+{
+  "n_questions": 32,
+  "n_rollouts": 192,
+  "n_actions": 6,
+  "categories": {
+    "all_correct": 12,
+    "signal": 16,
+    "all_wrong": 4
+  },
+  "signal_rate": 0.5,
+  "all_correct_rate": 0.375,
+  "all_wrong_rate": 0.125,
+  "label_action_distribution": {
+    "baseline": 10,
+    "format_first": 1,
+    "step_by_step": 3,
+    "careful_reading": 2
+  },
+  "per_action_em": {
+    "baseline": 0.6875,
+    "careful_reading": 0.6875,
+    "step_by_step": 0.6875,
+    "format_first": 0.6875,
+    "reject_unsupported": 0.6875,
+    "type_aware": 0.59375
+  },
+  "data_file": "/home/ivaning/PAgent/data/train.jsonl",
+  "protocol": "native"
+}

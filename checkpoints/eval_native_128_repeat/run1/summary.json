@@ -1,0 +1,36 @@
+{
+  "protocol": "native",
+  "live_baseline": {
+    "em": 0.453125,
+    "format_accuracy": 0.7109375,
+    "avg_reward": 0.453125,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 128
+    },
+    "per_action_em": {
+      "baseline": 0.453125
+    },
+    "n": 128
+  },
+  "router": {
+    "em": 0.4375,
+    "format_accuracy": 0.6640625,
+    "avg_reward": 0.4375,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "type_aware": 102,
+      "step_by_step": 21,
+      "format_first": 3,
+      "careful_reading": 2
+    },
+    "per_action_em": {
+      "careful_reading": 0.0,
+      "step_by_step": 0.47619047619047616,
+      "format_first": 0.3333333333333333,
+      "type_aware": 0.4411764705882353
+    },
+    "n": 128
+  },
+  "router_vs_live_baseline": -0.015625
+}

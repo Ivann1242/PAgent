@@ -1,0 +1,24 @@
+{
+  "rollouts_file": "/home/ivaning/PAgent/checkpoints/label_2048/rollouts.jsonl",
+  "out_file": "/home/ivaning/PAgent/checkpoints/label_2048/dpo_pairs.jsonl",
+  "category": "signal",
+  "n_questions": 759,
+  "n_pairs": 5050,
+  "avg_pairs_per_question": 6.653491436100132,
+  "win_action_distribution": {
+    "baseline": 791,
+    "careful_reading": 647,
+    "step_by_step": 1057,
+    "format_first": 901,
+    "type_aware": 734,
+    "reject_unsupported": 920
+  },
+  "lose_action_distribution": {
+    "reject_unsupported": 736,
+    "careful_reading": 1129,
+    "format_first": 693,
+    "type_aware": 1006,
+    "baseline": 859,
+    "step_by_step": 627
+  }
+}
