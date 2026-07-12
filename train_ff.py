@@ -25,7 +25,10 @@ from grpo import completion_logprobs, encode_prompt_completion, grpo_loss, group
 from label import _AnswererPool
 
 
-def _generate_one(model, tokenizer, prompt, *, max_new_tokens, temperature, device):
+def _generate_k_samples(
+    model, tokenizer, prompt, *, k, max_new_tokens, temperature, device,
+) -> list[str]:
+    """Sample K independent completions for one prompt in a single generate call."""
     inputs = tokenizer(prompt, return_tensors="pt").to(device)
     with torch.no_grad():
         out = model.generate(
@@ -34,10 +37,72 @@ def _generate_one(model, tokenizer, prompt, *, max_new_tokens, temperature, devi
             do_sample=True,
             temperature=temperature,
             top_p=0.95,
-            pad_token_id=tokenizer.eos_token_id,
+            num_return_sequences=k,
+            pad_token_id=tokenizer.pad_token_id,
         )
-    gen = out[0, inputs["input_ids"].shape[1]:]
-    return tokenizer.decode(gen, skip_special_tokens=True)
+    prompt_len = inputs["input_ids"].shape[1]
+    return [
+        tokenizer.decode(out[i, prompt_len:], skip_special_tokens=True)
+        for i in range(out.shape[0])
+    ]
+
+
+def _generate_batch_groups(
+    model, tokenizer, prompts: list[str], *,
+    k, max_new_tokens, temperature, device,
+) -> list[list[str]]:
+    """Sample K completions per prompt; batch prompts when len > 1."""
+    if not prompts:
+        return []
+    if len(prompts) == 1:
+        return [_generate_k_samples(
+            model, tokenizer, prompts[0],
+            k=k, max_new_tokens=max_new_tokens, temperature=temperature, device=device,
+        )]
+
+    _maybe_empty_cache(device)
+    pad_side = tokenizer.padding_side
+    tokenizer.padding_side = "left"
+    try:
+        inputs = tokenizer(
+            prompts, return_tensors="pt", padding=True, add_special_tokens=False,
+        ).to(device)
+        try:
+            with torch.no_grad():
+                out = model.generate(
+                    **inputs,
+                    max_new_tokens=max_new_tokens,
+                    do_sample=True,
+                    temperature=temperature,
+                    top_p=0.95,
+                    num_return_sequences=k,
+                    pad_token_id=tokenizer.pad_token_id,
+                )
+        except torch.cuda.OutOfMemoryError:
+            _maybe_empty_cache(device)
+            if len(prompts) <= 1:
+                raise
+            mid = max(1, len(prompts) // 2)
+            return (
+                _generate_batch_groups(
+                    model, tokenizer, prompts[:mid],
+                    k=k, max_new_tokens=max_new_tokens, temperature=temperature, device=device,
+                )
+                + _generate_batch_groups(
+                    model, tokenizer, prompts[mid:],
+                    k=k, max_new_tokens=max_new_tokens, temperature=temperature, device=device,
+                )
+            )
+        prompt_len = inputs["input_ids"].shape[1]
+        groups: list[list[str]] = []
+        for b in range(len(prompts)):
+            groups.append([
+                tokenizer.decode(out[b * k + j, prompt_len:], skip_special_tokens=True)
+                for j in range(k)
+            ])
+        return groups
+    finally:
+        tokenizer.padding_side = pad_side
 
 
 def _generate_group(
@@ -49,18 +114,15 @@ def _generate_group(
     was_train = model.training
     model.eval()
     try:
-        completions: list[str] = []
         for round_i in range(max_rounds):
             temp = temperature * (1.0 + 0.35 * round_i)
-            while len(completions) < k:
-                completions.append(_generate_one(
-                    model, tokenizer, prompt,
-                    max_new_tokens=max_new_tokens, temperature=temp, device=device,
-                ))
+            completions = _generate_k_samples(
+                model, tokenizer, prompt,
+                k=k, max_new_tokens=max_new_tokens, temperature=temp, device=device,
+            )
             hints = {parse_optimizer_output(c)[0] for c in completions}
             if len(hints) >= min_unique or round_i + 1 >= max_rounds:
                 return completions[:k]
-            completions = []
     finally:
         if was_train:
             model.train()
@@ -89,10 +151,17 @@ def train_ff(
     lr: float = LR,
     gpu: str = "1",
     rollout_workers: int = 32,
+    gen_batch_size: int = 4,
     min_unique: int = 1,
     seed: int = 42,
     answer_urls: list[str] | None = None,
+    data_file: Path | None = None,
+    init_adapter_dir: Path | None = None,
+    adapter_dir: Path | None = None,
+    rollout_log: Path | None = None,
+    start_step: int = 1,
 ) -> Path:
+    import json
     import os
 
     os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
@@ -102,30 +171,50 @@ def train_ff(
     random.seed(seed)
     torch.manual_seed(seed)
 
-    rows = load_jsonl(cfg.train_file)
+    rows = load_jsonl(data_file or cfg.train_file)
     if len(rows) < batch_size:
-        raise SystemExit(f"train_file has {len(rows)} rows, need batch_size={batch_size}")
+        raise SystemExit(f"train data has {len(rows)} rows, need batch_size={batch_size}")
 
     pool = _AnswererPool(answer_urls or cfg.answer_urls, cfg.answer_model)
-    cfg.ff_adapter_dir.mkdir(parents=True, exist_ok=True)
-    if cfg.ff_rollout_log.exists():
-        cfg.ff_rollout_log.unlink()
+    adapter_dir = Path(adapter_dir or cfg.ff_adapter_dir)
+    rollout_log = Path(rollout_log or cfg.ff_rollout_log)
+    adapter_dir.mkdir(parents=True, exist_ok=True)
+    state_path = adapter_dir / "grpo_train_state.json"
+    if start_step > 1 and state_path.exists():
+        state = json.loads(state_path.read_text())
+        cursor = int(state.get("cursor", 0))
+        print(f"resume from step={start_step} cursor={cursor}", flush=True)
+    else:
+        cursor = 0
+        start_step = 1
+        if rollout_log.exists():
+            rollout_log.unlink()
 
     tokenizer = AutoTokenizer.from_pretrained(cfg.router_base, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "left"
 
     model = AutoModelForCausalLM.from_pretrained(
         cfg.router_base,
         torch_dtype=torch.bfloat16 if device.type == "cuda" else torch.float32,
         trust_remote_code=True,
     ).to(device)
-    model = get_peft_model(model, LoraConfig(
-        r=16, lora_alpha=32, lora_dropout=0.0, bias="none",
-        task_type="CAUSAL_LM",
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                        "gate_proj", "up_proj", "down_proj"],
-    ))
+    if init_adapter_dir is not None:
+        from peft import PeftModel
+        model = PeftModel.from_pretrained(model, Path(init_adapter_dir), is_trainable=True)
+        print(f"init adapter -> {init_adapter_dir}", flush=True)
+    else:
+        model = get_peft_model(model, LoraConfig(
+            r=16, lora_alpha=32, lora_dropout=0.0, bias="none",
+            task_type="CAUSAL_LM",
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                            "gate_proj", "up_proj", "down_proj"],
+        ))
+    print(
+        f"hint gen: batched num_return_sequences={k}, gen_batch_size={gen_batch_size}",
+        flush=True,
+    )
     if hasattr(model, "gradient_checkpointing_enable"):
         model.gradient_checkpointing_enable()
     model.train()
@@ -135,7 +224,17 @@ def train_ff(
     grad_scale = 1.0 / max(batch_size * k, 1)
     skipped_groups = 0
     total_groups = 0
-    cursor = 0
+
+    def _save_step(step: int) -> None:
+        model.save_pretrained(adapter_dir)
+        tokenizer.save_pretrained(adapter_dir)
+        state_path.write_text(json.dumps({
+            "step": step,
+            "cursor": cursor,
+            "batch_size": batch_size,
+            "k": k,
+            "gen_batch_size": gen_batch_size,
+        }, indent=2) + "\n")
 
     def _rollout_task(item):
         row, comp = item
@@ -148,31 +247,48 @@ def train_ff(
         r["id"] = row["id"]
         return row["id"], comp, r
 
-    for step in range(1, max_steps + 1):
+    for step in range(start_step, max_steps + 1):
         batch = [rows[(cursor + i) % len(rows)] for i in range(batch_size)]
         cursor = (cursor + batch_size) % len(rows)
 
         groups: list[dict] = []
-        for row in batch:
-            opt_prompt = format_router_input(tokenizer, build_optimizer_prompt(row["problem"]))
-            completions = _generate_group(
-                model, tokenizer, opt_prompt,
-                k=k, max_new_tokens=256, temperature=SMALL_TEMP_TRAIN, device=device,
-                min_unique=min_unique,
-            )
-            old_lps, ref_lps = [], []
-            for comp in completions:
-                old_lps.append(_logprobs(model, tokenizer, opt_prompt, comp, device).detach())
-                ref_lps.append(
-                    _logprobs(model, tokenizer, opt_prompt, comp, device, no_adapter=True).detach()
+        was_train = model.training
+        model.eval()
+        try:
+            for chunk_start in range(0, len(batch), gen_batch_size):
+                chunk = batch[chunk_start: chunk_start + gen_batch_size]
+                prompts = [
+                    format_router_input(tokenizer, build_optimizer_prompt(row["problem"]))
+                    for row in chunk
+                ]
+                batch_completions = _generate_batch_groups(
+                    model, tokenizer, prompts,
+                    k=k, max_new_tokens=256, temperature=SMALL_TEMP_TRAIN, device=device,
                 )
-            groups.append({
-                "row": row,
-                "opt_prompt": opt_prompt,
-                "completions": completions,
-                "old_lps": old_lps,
-                "ref_lps": ref_lps,
-            })
+                for row, opt_prompt, completions in zip(chunk, prompts, batch_completions):
+                    hints = {parse_optimizer_output(c)[0] for c in completions}
+                    if min_unique > 1 and len(hints) < min_unique:
+                        completions = _generate_group(
+                            model, tokenizer, opt_prompt,
+                            k=k, max_new_tokens=256, temperature=SMALL_TEMP_TRAIN, device=device,
+                            min_unique=min_unique,
+                        )
+                    old_lps, ref_lps = [], []
+                    for comp in completions:
+                        old_lps.append(_logprobs(model, tokenizer, opt_prompt, comp, device).detach())
+                        ref_lps.append(
+                            _logprobs(model, tokenizer, opt_prompt, comp, device, no_adapter=True).detach()
+                        )
+                    groups.append({
+                        "row": row,
+                        "opt_prompt": opt_prompt,
+                        "completions": completions,
+                        "old_lps": old_lps,
+                        "ref_lps": ref_lps,
+                    })
+        finally:
+            if was_train:
+                model.train()
         _maybe_empty_cache(device)
 
         tasks = [
@@ -184,7 +300,7 @@ def train_ff(
         with ThreadPoolExecutor(max_workers=workers) as ex:
             for qid, comp, r in ex.map(_rollout_task, tasks):
                 rollout_map[(qid, comp)] = r
-                append_jsonl(cfg.ff_rollout_log, r)
+                append_jsonl(rollout_log, r)
 
         step_skipped = 0
         step_em = 0.0
@@ -224,33 +340,38 @@ def train_ff(
         _maybe_empty_cache(device)
 
         print(
-            f"step={step}/{max_steps} batch={batch_size} k={k} "
+            f"step={step}/{max_steps} batch={batch_size} k={k} gen_batch={gen_batch_size} "
             f"em={step_em/batch_size:.0%} skip_groups={step_skipped}/{batch_size} "
             f"pg={step_pg/max(n_pg,1):.3f} grad={grad_norm:.4f}",
             flush=True,
         )
+        _save_step(step)
+        _maybe_empty_cache(device)
 
     print(
         f"skipped_groups={skipped_groups}/{total_groups} "
         f"({100*skipped_groups/max(total_groups,1):.1f}%)",
         flush=True,
     )
-    model.save_pretrained(cfg.ff_adapter_dir)
-    tokenizer.save_pretrained(cfg.ff_adapter_dir)
-    print(f"adapter -> {cfg.ff_adapter_dir}")
-    return cfg.ff_adapter_dir
+    model.save_pretrained(adapter_dir)
+    tokenizer.save_pretrained(adapter_dir)
+    print(f"adapter -> {adapter_dir}")
+    return adapter_dir
 
 
-def merge_ff(cfg: Config) -> Path:
+def merge_ff(cfg: Config, *, adapter_dir: Path | None = None, merged_dir: Path | None = None) -> Path:
     from peft import PeftModel
+
+    adapter_dir = Path(adapter_dir or cfg.ff_adapter_dir)
+    merged_dir = Path(merged_dir or cfg.ff_merged_dir)
 
     tok = AutoTokenizer.from_pretrained(cfg.router_base, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
         cfg.router_base, torch_dtype=torch.bfloat16, trust_remote_code=True, device_map="cpu",
     )
-    model = PeftModel.from_pretrained(model, cfg.ff_adapter_dir).merge_and_unload()
-    cfg.ff_merged_dir.mkdir(parents=True, exist_ok=True)
-    model.save_pretrained(cfg.ff_merged_dir)
-    tok.save_pretrained(cfg.ff_merged_dir)
-    print(f"merged -> {cfg.ff_merged_dir}")
-    return cfg.ff_merged_dir
+    model = PeftModel.from_pretrained(model, adapter_dir).merge_and_unload()
+    merged_dir.mkdir(parents=True, exist_ok=True)
+    model.save_pretrained(merged_dir)
+    tok.save_pretrained(merged_dir)
+    print(f"merged -> {merged_dir}")
+    return merged_dir

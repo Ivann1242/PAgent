@@ -1,0 +1,18 @@
+{
+  "n_questions": 32,
+  "n_baseline_wrong": 10,
+  "n_hint_candidates": 31,
+  "n_labels": 15,
+  "n_questions_with_label": 7,
+  "label_rate": 0.21875,
+  "k": 4,
+  "hint_temp": 0.8,
+  "data_file": "/home/ivaning/PAgent/data/train.jsonl",
+  "answer_urls": [
+    "http://127.0.0.1:8006/v1",
+    "http://127.0.0.1:8007/v1",
+    "http://127.0.0.1:8008/v1"
+  ],
+  "workers": 32,
+  "protocol": "native"
+}

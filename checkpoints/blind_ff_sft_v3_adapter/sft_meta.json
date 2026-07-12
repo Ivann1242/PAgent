@@ -1,0 +1,9 @@
+{
+  "labels_file": "checkpoints/blind_hint_2048/mixed_labels_r50.jsonl",
+  "n_train": 807,
+  "n_val": 89,
+  "epochs": 3,
+  "batch_size": 4,
+  "lr": 2e-05,
+  "mode": "freeform_sft"
+}

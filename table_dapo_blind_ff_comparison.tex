@@ -1,0 +1,43 @@
+% Blind free-form SFT comparison on DAPO-Math (128 samples, 4 paired repeats).
+% Requires: \usepackage{booktabs}, \usepackage{xcolor}
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\caption{Paired native-protocol evaluation on 128 DAPO-Math test samples ($T{=}0$, 4 repeats).
+Live baseline is GPT-OSS-20B without hint.
+Action router is the Qwen3-4B discrete-action GRPO router (v2).
+FF SFT (template) uses template hints for SFT supervision.
+Blind FF-SFT trains on OSS-generated flip hints from problem text only (17K full: 3687 labels; 17K dedup: 1809 labels after per-question selection).
+Mean $\pm$ std is reported over four paired repeats; $\Delta$ uses the shared live-baseline mean (42.58\%).}
+\label{tab:dapo-blind-ff-comparison}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric} & \textbf{Mean} & \textbf{Std} \\
+\midrule
+Live baseline EM                         & 42.58\% & $\pm 3.9$ pp \\
+\midrule
+Action router EM                         & 44.34\% & $\pm 1.0$ pp \\
+$\Delta$ EM (action router $-$ baseline) & \textcolor{green!60!black}{$+1.76$ pp} & \textcolor{green!60!black}{$\pm 3.4$ pp} \\
+\midrule
+FF SFT (template) router EM              & 50.20\% & $\pm 1.4$ pp \\
+$\Delta$ EM (FF SFT $-$ baseline)        & \textcolor{green!60!black}{$+7.62$ pp} & \textcolor{green!60!black}{$\pm 1.4$ pp} \\
+\midrule
+Blind FF-SFT (17K full) router EM        & \textbf{51.56\%} & $\pm 1.5$ pp \\
+$\Delta$ EM (17K full $-$ baseline)      & \textcolor{green!60!black}{\textbf{$+8.98$ pp}} & \textcolor{green!60!black}{$\pm 2.2$ pp} \\
+\midrule
+Blind FF-SFT (17K dedup) router EM       & 48.44\% & $\pm 2.0$ pp \\
+$\Delta$ EM (17K dedup $-$ baseline)     & \textcolor{green!60!black}{$+5.86$ pp} & \textcolor{green!60!black}{$\pm 2.4$ pp} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25em}
+{\scriptsize
+Shared live-baseline statistics follow the action-router four-repeat protocol.
+Paired $\Delta$ within each eval session: Blind 17K full $=+9.57$ pp (baseline mean 41.99\%);
+Blind 17K dedup $=+5.27$ pp (baseline mean 43.16\%).
+McNemar pooled discordant pairs: FF SFT template router-only$=51$, baseline-only$=26$, $p{=}0.006$;
+Blind 17K full router-only$=68$, baseline-only$=19$, $p{<}0.001$;
+Blind 17K dedup router-only$=55$, baseline-only$=28$, $p{=}0.015$.
+}
+\end{table}

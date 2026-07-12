@@ -1,0 +1,7 @@
+{
+  "step": 32,
+  "cursor": 1024,
+  "batch_size": 32,
+  "k": 8,
+  "gen_batch_size": 4
+}

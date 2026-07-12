@@ -5,6 +5,7 @@ set -euo pipefail
 
 MODEL="${OSS_MODEL_PATH:-/home/ivaning/models/gpt-oss-20b}"
 UTIL="${GPU_MEM_UTIL:-0.70}"
+MAX_LEN="${OSS_MAX_MODEL_LEN:-}"
 LOG_DIR="${LOG_DIR:-/home/ivaning/PAgent/logs}"
 mkdir -p "$LOG_DIR"
 
@@ -18,11 +19,16 @@ start_one() {
     return
   fi
   echo "Starting OSS-20B on GPU ${gpu} -> :${port}"
+  local -a extra=()
+  if [[ -n "$MAX_LEN" ]]; then
+    extra+=(--max-model-len "$MAX_LEN")
+  fi
   CUDA_VISIBLE_DEVICES="${gpu}" nohup python -m vllm.entrypoints.openai.api_server \
     --model "$MODEL" \
     --port "$port" \
     --tensor-parallel-size 1 \
     --gpu-memory-utilization "$UTIL" \
+    "${extra[@]}" \
     --served-model-name gpt-oss-20b \
     > "${LOG_DIR}/oss-${port}.log" 2>&1 &
   echo "  pid=$! log=${LOG_DIR}/oss-${port}.log"

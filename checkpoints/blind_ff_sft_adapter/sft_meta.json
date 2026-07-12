@@ -1,0 +1,9 @@
+{
+  "labels_file": "checkpoints/blind_hint_2048/oracle_labels.jsonl",
+  "n_train": 404,
+  "n_val": 44,
+  "epochs": 3,
+  "batch_size": 4,
+  "lr": 2e-05,
+  "mode": "freeform_sft"
+}

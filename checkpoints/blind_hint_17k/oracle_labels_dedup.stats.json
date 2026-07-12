@@ -1,0 +1,19 @@
+{
+  "labels_in": 3687,
+  "labels_out": 1809,
+  "unique_questions": 1809,
+  "single_candidate": 852,
+  "multi_candidate": 957,
+  "repeats": 3,
+  "retest_singles": false,
+  "oss_retest_calls": 8505,
+  "labels_file": "checkpoints/blind_hint_17k/oracle_labels.jsonl",
+  "out_file": "checkpoints/blind_hint_17k/oracle_labels_dedup.jsonl",
+  "scoring_file": "checkpoints/blind_hint_17k/oracle_labels_dedup.scoring.jsonl",
+  "answer_urls": [
+    "http://127.0.0.1:8006/v1",
+    "http://127.0.0.1:8008/v1",
+    "http://127.0.0.1:8009/v1"
+  ],
+  "protocol": "native"
+}

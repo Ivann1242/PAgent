@@ -20,5 +20,10 @@ checkpoints/ff_adapter/
 checkpoints/*/adapter/tokenizer.json
 checkpoints/*/adapter/tokenizer_config.json
 
-# Large rollout cache (110MB+; keep labels/stats instead)
+# Large intermediate labeling / rollout caches (keep labels + stats + small evals)
 checkpoints/label_2048/rollouts.jsonl
+checkpoints/**/baselines.jsonl
+checkpoints/**/oracle_attempts.jsonl
+checkpoints/**/rollouts.jsonl
+checkpoints/blind_ff_grpo_rollouts.jsonl
+checkpoints/*_rollouts.jsonl

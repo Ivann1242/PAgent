@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "labels_file": "checkpoints/blind_hint_17k/oracle_labels_dedup.jsonl",
+    "n_questions": 1809,
+    "router_model": "qwen3-4b-blind-ff-17k",
+    "router_url": "http://127.0.0.1:8086/v1",
+    "protocol": "native",
+    "modes": [
+      "live_baseline",
+      "ff_router",
+      "oracle_hint"
+    ]
+  },
+  "live_baseline": {
+    "em": 0.3067993366500829,
+    "format_accuracy": 0.326147042564953,
+    "avg_reward": 0.3067993366500829,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 1809
+    },
+    "per_action_em": {
+      "baseline": 0.3067993366500829
+    },
+    "n": 1809
+  },
+  "ff_router": {
+    "em": 0.5594250967385296,
+    "format_accuracy": 0.552791597567717,
+    "avg_reward": 0.5500276395798784,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "freeform": 1809
+    },
+    "per_action_em": {},
+    "n": 1809
+  },
+  "oracle_hint": {
+    "em": 0.6158098396904367,
+    "format_accuracy": 0.5981205085682698,
+    "avg_reward": 0.6158098396904367,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "oracle_hint": 1809
+    },
+    "per_action_em": {},
+    "n": 1809
+  },
+  "ff_router_vs_live_baseline": 0.25262576008844667,
+  "ff_router_vs_oracle_hint": -0.056384742951907096
+}

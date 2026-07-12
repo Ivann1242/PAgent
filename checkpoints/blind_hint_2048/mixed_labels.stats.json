@@ -1,0 +1,8 @@
+{
+  "n_total": 1876,
+  "n_empty": 1428,
+  "n_flip": 448,
+  "baselines_file": "/home/ivaning/PAgent/checkpoints/blind_hint_2048/baselines.jsonl",
+  "oracle_labels_file": "/home/ivaning/PAgent/checkpoints/blind_hint_2048/oracle_labels.jsonl",
+  "out_file": "/home/ivaning/PAgent/checkpoints/blind_hint_2048/mixed_labels.jsonl"
+}

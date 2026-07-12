@@ -1,0 +1,56 @@
+{
+  "repeats": 4,
+  "limit": 128,
+  "protocol": "native",
+  "router_mode": "ff_router",
+  "router_model": "qwen3-4b-blind-ff",
+  "runs": [
+    {
+      "run": 1,
+      "live_baseline_em": 0.453125,
+      "router_em": 0.484375,
+      "delta_pp": 3.125,
+      "n": 128,
+      "router_only_correct": 12,
+      "baseline_only_correct": 8,
+      "mcnemar_p": 0.5034446716308594
+    },
+    {
+      "run": 2,
+      "live_baseline_em": 0.4296875,
+      "router_em": 0.484375,
+      "delta_pp": 5.46875,
+      "n": 128,
+      "router_only_correct": 15,
+      "baseline_only_correct": 8,
+      "mcnemar_p": 0.21003961563110352
+    },
+    {
+      "run": 3,
+      "live_baseline_em": 0.4375,
+      "router_em": 0.515625,
+      "delta_pp": 7.8125,
+      "n": 128,
+      "router_only_correct": 14,
+      "baseline_only_correct": 4,
+      "mcnemar_p": 0.0308837890625
+    },
+    {
+      "run": 4,
+      "live_baseline_em": 0.4375,
+      "router_em": 0.453125,
+      "delta_pp": 1.5625,
+      "n": 128,
+      "router_only_correct": 12,
+      "baseline_only_correct": 10,
+      "mcnemar_p": 0.8318119049072266
+    }
+  ],
+  "live_baseline_em_mean": 0.439453125,
+  "live_baseline_em_std": 0.008513474499102879,
+  "router_em_mean": 0.484375,
+  "router_em_std": 0.02209708691207961,
+  "delta_pp_mean": 4.4921875,
+  "delta_pp_std": 2.3680382134730746,
+  "delta_pp_all_positive": true
+}

@@ -1,0 +1,28 @@
+{
+  "protocol": "native",
+  "live_baseline": {
+    "em": 0.4453125,
+    "format_accuracy": 0.7109375,
+    "avg_reward": 0.4453125,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 128
+    },
+    "per_action_em": {
+      "baseline": 0.4453125
+    },
+    "n": 128
+  },
+  "ff_router": {
+    "em": 0.515625,
+    "format_accuracy": 0.8125,
+    "avg_reward": 0.515625,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "freeform": 128
+    },
+    "per_action_em": {},
+    "n": 128
+  },
+  "ff_router_vs_live_baseline": 0.0703125
+}

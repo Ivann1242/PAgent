@@ -16,6 +16,7 @@ from core import build_small_prompt, extract_raw_question, write_jsonl
 from eval import run_eval, run_precheck
 from dpo_train import merge_dpo, train_dpo
 from label import run_label
+from oracle_hint import run_oracle_hint
 from sft_train import merge_sft, train_sft
 from sft_ff_train import merge_sft_ff, train_sft_ff
 from train import merge, train
@@ -106,6 +107,16 @@ def main() -> None:
                     help="comma-separated vLLM URLs (default: 4 endpoints from config)")
     sp.add_argument("--protocol", choices=["native", "paper"], default="native")
 
+    sp = sub.add_parser("oracle-hint", help="Blind OSS hints (problem only) -> SFT labels if flip")
+    sp.add_argument("--limit", type=int, default=None)
+    sp.add_argument("--data-file", default=None)
+    sp.add_argument("--out-dir", default=None)
+    sp.add_argument("--workers", type=int, default=32)
+    sp.add_argument("--k", type=int, default=6, help="hint samples per baseline-wrong question")
+    sp.add_argument("--hint-temp", type=float, default=0.8)
+    sp.add_argument("--answer-urls", default=None)
+    sp.add_argument("--protocol", choices=["native", "paper"], default="native")
+
     sp = sub.add_parser("dpo-build", help="Build offline DPO pairs from rollouts.jsonl")
     sp.add_argument("--rollouts-file", default=None)
     sp.add_argument("--out-file", default=None)
@@ -146,13 +157,44 @@ def main() -> None:
     sp.add_argument("--k", type=int, default=8)
     sp.add_argument("--gpu", default="1")
     sp.add_argument("--rollout-workers", type=int, default=32)
+    sp.add_argument("--gen-batch-size", type=int, default=4,
+                    help="parallel Qwen hint prompts per generate batch")
+    sp.add_argument("--start-step", type=int, default=1,
+                    help="resume GRPO from this step (requires prior checkpoint in --out-dir)")
     sp.add_argument("--lr", type=float, default=1e-6)
+    sp.add_argument("--data-file", default=None)
+    sp.add_argument("--init-adapter", default=None, help="continue from existing LoRA adapter")
+    sp.add_argument("--out-dir", default=None, help="output adapter dir")
+    sp.add_argument("--rollout-log", default=None)
+    sp.add_argument("--answer-urls", default=None,
+                    help="comma-separated OSS URLs (default: all 4 endpoints)")
 
     sp = sub.add_parser("ff-merge", help="Merge free-form GRPO LoRA adapter")
+    sp.add_argument("--adapter-dir", default=None)
+    sp.add_argument("--merged-dir", default=None)
 
     sp = sub.add_parser("ff-sft-build", help="Build free-form SFT labels from action labels")
     sp.add_argument("--labels-file", default=None)
     sp.add_argument("--out-file", default=None)
+
+    sp = sub.add_parser("ff-dedup-blind", help="Pick one flip hint per question via repeat OSS eval")
+    sp.add_argument("--labels-file", default=None)
+    sp.add_argument("--out-file", default=None)
+    sp.add_argument("--repeats", type=int, default=3,
+                    help="OSS re-tests per candidate hint (multi-candidate questions only)")
+    sp.add_argument("--workers", type=int, default=32)
+    sp.add_argument("--answer-urls", default=None)
+    sp.add_argument("--protocol", choices=["native", "paper"], default="native")
+    sp.add_argument("--retest-singles", action="store_true",
+                    help="also re-test questions that only have one flip hint")
+
+    sp = sub.add_parser("ff-sft-mix-blind", help="Mix blind flip hints + empty for baseline-correct")
+    sp.add_argument("--baselines-file", default=None)
+    sp.add_argument("--oracle-labels-file", default=None)
+    sp.add_argument("--out-file", default=None)
+    sp.add_argument("--empty-ratio", type=float, default=0.5,
+                    help="target fraction of empty-hint rows (default: 0.5)")
+    sp.add_argument("--seed", type=int, default=42)
 
     sp = sub.add_parser("ff-sft-train", help="SFT free-form prompt optimizer from ff labels")
     sp.add_argument("--labels-file", default=None)
@@ -163,6 +205,8 @@ def main() -> None:
     sp.add_argument("--lr", type=float, default=2e-5)
 
     sp = sub.add_parser("ff-sft-merge", help="Merge free-form SFT LoRA adapter")
+    sp.add_argument("--adapter-dir", default=None)
+    sp.add_argument("--merged-dir", default=None)
 
     sub.add_parser("merge", help="Merge LoRA adapter")
 
@@ -205,6 +249,20 @@ def main() -> None:
             workers=args.workers,
             answer_urls=urls,
             protocol=args.protocol,
+        )
+    elif args.cmd == "oracle-hint":
+        urls = [u.strip() for u in args.answer_urls.split(",")] if args.answer_urls else ANSWER_URLS
+        urls = check_answerers(urls, cfg.answer_model)
+        run_oracle_hint(
+            cfg,
+            limit=args.limit,
+            data_file=Path(args.data_file) if args.data_file else None,
+            out_dir=Path(args.out_dir) if args.out_dir else None,
+            workers=args.workers,
+            answer_urls=urls,
+            protocol=args.protocol,
+            k=args.k,
+            hint_temp=args.hint_temp,
         )
     elif args.cmd == "dpo-build":
         from dpo_data import build_dpo_pairs
@@ -250,7 +308,11 @@ def main() -> None:
               grad_accum_groups=preset.get("grad_accum_groups", 4),
               rollout_workers=args.rollout_workers or preset.get("k", 8))
     elif args.cmd == "ff-train":
-        urls = check_answerers(cfg.answer_urls, cfg.answer_model)
+        urls = (
+            [u.strip() for u in args.answer_urls.split(",")]
+            if args.answer_urls else cfg.answer_urls
+        )
+        urls = check_answerers(urls, cfg.answer_model)
         cfg.answer_urls = urls
         if not cfg.train_file.exists():
             prepare(cfg, train_size=2048, val_size=256)
@@ -261,15 +323,50 @@ def main() -> None:
             k=args.k,
             gpu=args.gpu,
             rollout_workers=args.rollout_workers,
+            gen_batch_size=args.gen_batch_size,
             lr=args.lr,
+            data_file=Path(args.data_file) if args.data_file else None,
+            init_adapter_dir=Path(args.init_adapter) if args.init_adapter else None,
+            adapter_dir=Path(args.out_dir) if args.out_dir else None,
+            rollout_log=Path(args.rollout_log) if args.rollout_log else None,
+            start_step=args.start_step,
         )
     elif args.cmd == "ff-merge":
-        merge_ff(cfg)
+        merge_ff(
+            cfg,
+            adapter_dir=Path(args.adapter_dir) if args.adapter_dir else None,
+            merged_dir=Path(args.merged_dir) if args.merged_dir else None,
+        )
     elif args.cmd == "ff-sft-build":
         from ff_data import build_ff_labels
         build_ff_labels(
             Path(args.labels_file or cfg.ckpt_dir / "label_2048" / "labels.jsonl"),
             Path(args.out_file or cfg.ckpt_dir / "label_2048" / "ff_labels.jsonl"),
+        )
+    elif args.cmd == "ff-dedup-blind":
+        from dedup_blind_labels import dedup_blind_labels
+        urls = [u.strip() for u in args.answer_urls.split(",")] if args.answer_urls else ANSWER_URLS
+        urls = check_answerers(urls, cfg.answer_model)
+        blind_dir = cfg.ckpt_dir / "blind_hint_17k"
+        dedup_blind_labels(
+            cfg,
+            labels_file=Path(args.labels_file or blind_dir / "oracle_labels.jsonl"),
+            out_file=Path(args.out_file or blind_dir / "oracle_labels_dedup.jsonl"),
+            repeats=args.repeats,
+            workers=args.workers,
+            answer_urls=urls,
+            protocol=args.protocol,
+            retest_singles=args.retest_singles,
+        )
+    elif args.cmd == "ff-sft-mix-blind":
+        from ff_data import build_blind_mixed_labels
+        blind_dir = cfg.ckpt_dir / "blind_hint_2048"
+        build_blind_mixed_labels(
+            Path(args.baselines_file or blind_dir / "baselines.jsonl"),
+            Path(args.oracle_labels_file or blind_dir / "oracle_labels.jsonl"),
+            Path(args.out_file or blind_dir / "mixed_labels.jsonl"),
+            empty_ratio=args.empty_ratio,
+            seed=args.seed,
         )
     elif args.cmd == "ff-sft-train":
         train_sft_ff(
@@ -282,7 +379,11 @@ def main() -> None:
             lr=args.lr,
         )
     elif args.cmd == "ff-sft-merge":
-        merge_sft_ff(cfg)
+        merge_sft_ff(
+            cfg,
+            adapter_dir=Path(args.adapter_dir) if args.adapter_dir else None,
+            merged_dir=Path(args.merged_dir) if args.merged_dir else None,
+        )
     elif args.cmd == "merge":
         merge(cfg)
     elif args.cmd == "eval":
