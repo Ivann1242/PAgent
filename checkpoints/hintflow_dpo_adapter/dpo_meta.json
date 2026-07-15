@@ -1,0 +1,28 @@
+{
+  "pairs_file": "/home/ivaning/PAgent/checkpoints/hintflow_trees_2k/dpo_pairs.jsonl",
+  "n_train": 788,
+  "n_val": 87,
+  "epochs": 3,
+  "batch_size": 1,
+  "grad_accum": 8,
+  "lr": 5e-06,
+  "beta": 0.1,
+  "history": [
+    {
+      "epoch": 1,
+      "loss": 0.6946978109137056,
+      "val_pair_acc": 0.5172413793103449
+    },
+    {
+      "epoch": 2,
+      "loss": 0.6728515625,
+      "val_pair_acc": 0.5402298850574713
+    },
+    {
+      "epoch": 3,
+      "loss": 0.619560745161802,
+      "val_pair_acc": 0.5287356321839081
+    }
+  ],
+  "base_model": "/home/ivaning/prompt-r1r/Prompt-R1/Qwen/Qwen3-4B"
+}

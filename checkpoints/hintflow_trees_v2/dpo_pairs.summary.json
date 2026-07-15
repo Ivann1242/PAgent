@@ -1,0 +1,13 @@
+{
+  "trees": 810,
+  "trees_with_zero_pairs": 132,
+  "n_pairs": 13565,
+  "by_task": {
+    "plan": 466,
+    "review": 13099
+  },
+  "tau": 0.05,
+  "min_leaves": 1,
+  "delta_v_mean": 0.29335770596432115,
+  "out": "checkpoints/hintflow_trees_v2/dpo_pairs.jsonl"
+}

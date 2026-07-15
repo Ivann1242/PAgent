@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "data_file": "/home/ivaning/prompt-r1r/Prompt-R1/dataset/eval_data/DAPO-Math.parquet",
+    "n": 128,
+    "workers": 32,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1",
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1",
+      "http://127.0.0.1:8009/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b",
+    "solver_model": "gpt-oss-20b",
+    "batch_per_gpu_target": 8,
+    "n_gpus": 4,
+    "elapsed_sec": 548.1
+  },
+  "live_baseline": {
+    "em": 0.4765625,
+    "n": 128,
+    "n_error": 0
+  },
+  "hintflow": {
+    "em": 0.3984375,
+    "n": 128,
+    "n_error": 0,
+    "avg_steps": 3.3515625,
+    "action_counts": {
+      "INJECT": 163,
+      "REPLAN": 90,
+      "FINALIZE": 116,
+      "NO_HINT": 43,
+      "RETRY": 17
+    }
+  },
+  "hintflow_vs_live_baseline": -0.078125,
+  "paired": {
+    "hintflow_only_correct": 10,
+    "baseline_only_correct": 20
+  }
+}

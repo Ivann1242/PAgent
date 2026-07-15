@@ -1,0 +1,11 @@
+{
+  "out": "/home/ivaning/PAgent/checkpoints/hintflow_trees_2k/trees.jsonl",
+  "stopped_at": 500,
+  "n_total": 500,
+  "n_ok": 500,
+  "n_err": 0,
+  "solver_mean": 37.01,
+  "leaves_mean": 14.7,
+  "n_truncated": 360,
+  "note": "Stopped early at ~500 by request; resume later via same script (skips done ids)."
+}

@@ -1,0 +1,13 @@
+{
+  "trees": 500,
+  "trees_with_zero_pairs": 255,
+  "n_pairs": 875,
+  "by_task": {
+    "plan": 337,
+    "review": 538
+  },
+  "tau": 0.05,
+  "min_leaves": 1,
+  "delta_v_mean": 0.6276737660754056,
+  "out": "/home/ivaning/PAgent/checkpoints/hintflow_trees_2k/dpo_pairs.jsonl"
+}

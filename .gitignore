@@ -27,3 +27,9 @@ checkpoints/**/oracle_attempts.jsonl
 checkpoints/**/rollouts.jsonl
 checkpoints/blind_ff_grpo_rollouts.jsonl
 checkpoints/*_rollouts.jsonl
+
+# HintFlow large offline dumps (keep local; HF for weights)
+checkpoints/hintflow_trees_*/trees.jsonl
+checkpoints/hintflow_trees_*/trees.snap_*.jsonl
+checkpoints/hintflow_trees_*/dpo_ref_cache.pt
+checkpoints/hintflow_trees_v2/collect.log

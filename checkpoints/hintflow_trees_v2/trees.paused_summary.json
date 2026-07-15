@@ -1,0 +1,9 @@
+{
+  "total": 810,
+  "ok": 810,
+  "err": 0,
+  "solver_mean": 180.3395061728395,
+  "leaves_mean": 52.05679012345679,
+  "truncated": 0,
+  "stopped_for": "dpo_train_pause"
+}

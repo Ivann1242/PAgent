@@ -1,0 +1,16 @@
+{
+  "out": "checkpoints/hintflow_trees_v2/smoke_trees.jsonl",
+  "n_ok": 2,
+  "n_err": 0,
+  "elapsed_sec": 265.4,
+  "k": 2,
+  "max_turns": 7,
+  "max_solver_calls": 0,
+  "max_leaves": 0,
+  "contrastive": true,
+  "leaf_em_samples": 3,
+  "leaf_resample_temp": 0.7,
+  "orch_model_dir": "hintflow_dpo_merged (served as qwen3-4b @8086)",
+  "n_ok_total": 2,
+  "n_err_total": 0
+}

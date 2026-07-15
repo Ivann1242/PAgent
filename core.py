@@ -165,6 +165,26 @@ def check_format(text: str) -> bool:
     return bool(re.search(r"Final Answer:\s*\S", text, re.IGNORECASE))
 
 
+def _extract_boxed(text: str) -> str | None:
+    """Last \\boxed{...} with light brace matching."""
+    marker = "\\boxed{"
+    start = text.rfind(marker)
+    if start < 0:
+        return None
+    i = start + len(marker)
+    depth = 1
+    j = i
+    while j < len(text) and depth:
+        if text[j] == "{":
+            depth += 1
+        elif text[j] == "}":
+            depth -= 1
+        j += 1
+    if depth != 0:
+        return None
+    return text[i : j - 1].strip()
+
+
 def extract_final_answer(text: str) -> str:
     m = re.findall(r"Final Answer:\s*(.+)", text, re.IGNORECASE)
     if m:
@@ -172,10 +192,31 @@ def extract_final_answer(text: str) -> str:
     m = re.findall(r"<answer>(.*?)</answer>", text, re.DOTALL)
     if m:
         return m[-1].strip()
+    boxed = _extract_boxed(text)
+    if boxed is not None:
+        # strip trivial wrappers like xyz=1004
+        boxed = re.sub(r"^[A-Za-z]+\s*=\s*", "", boxed).strip()
+        return boxed
     m = re.findall(r"^Answer:\s*(.+)$", text, re.MULTILINE | re.IGNORECASE)
     if m:
         return m[-1].strip()
     return text.strip()
+
+
+def has_parseable_answer(text: str) -> bool:
+    """True iff observation contains an explicit short final answer span."""
+    if not text or not text.strip():
+        return False
+    if re.search(r"Final Answer:\s*\S", text, re.IGNORECASE):
+        return True
+    if re.search(r"<answer>\s*\S", text, re.IGNORECASE):
+        return True
+    if _extract_boxed(text) is not None:
+        return True
+    if re.search(r"^Answer:\s*\S", text, re.MULTILINE | re.IGNORECASE):
+        pred = extract_final_answer(text)
+        return bool(pred) and pred.strip() != text.strip() and len(pred) <= 200
+    return False
 
 
 def normalize_answer(s: str) -> str:

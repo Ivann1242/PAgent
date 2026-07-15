@@ -1,0 +1,13 @@
+{
+  "trees": 2,
+  "trees_with_zero_pairs": 0,
+  "n_pairs": 23,
+  "by_task": {
+    "plan": 2,
+    "review": 21
+  },
+  "tau": 0.05,
+  "min_leaves": 1,
+  "delta_v_mean": 0.37894205407554,
+  "out": "checkpoints/hintflow_trees_v2/smoke_dpo_pairs.jsonl"
+}

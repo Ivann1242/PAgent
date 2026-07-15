@@ -1,0 +1,11 @@
+{
+  "out": "checkpoints/hintflow_trees_2k/smoke_trees.jsonl",
+  "n_ok": 1,
+  "n_err": 0,
+  "elapsed_sec": 136.1,
+  "k": 2,
+  "max_solver_calls": 48,
+  "max_leaves": 32,
+  "n_ok_total": 1,
+  "n_err_total": 0
+}

@@ -1,0 +1,40 @@
+% In-distribution evaluation on the 1809 questions covered by training labels.
+% Requires: \usepackage{booktabs}, \usepackage{xcolor}
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{In-distribution evaluation on the 1809 unique question ids from
+\texttt{oracle\_labels\_dedup.jsonl} (training-label coverage).
+Each model is evaluated under three protocols: live baseline (no hint),
+router (Blind FF-SFT free-form hint), and oracle hint (replay of the
+training label).
+These items were baseline errors at blind-labeling time, so baseline EM
+is lower than the full-test $\sim$42\%.}
+\label{tab:idist-1809}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Model} & \textbf{Baseline} & \textbf{Router} & \textbf{Oracle hint}
+  & \textbf{Router$-$Baseline} & \textbf{Router$-$Oracle} \\
+\midrule
+17K full
+  & 30.68\%
+  & \textbf{55.94\%}
+  & 61.58\%
+  & \textcolor{green!60!black}{\textbf{$+25.26$\,pp}}
+  & $-5.64$\,pp \\
+17K dedup
+  & 29.96\%
+  & 53.51\%
+  & 61.47\%
+  & \textcolor{green!60!black}{$+23.55$\,pp}
+  & $-7.96$\,pp \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25em}
+{\scriptsize
+Full still outperforms Dedup in-distribution ($+2.4$\,pp) and remains about
+$5.6$\,pp below the oracle-hint upper bound.
+}
+\end{table}
