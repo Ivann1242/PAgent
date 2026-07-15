@@ -10,9 +10,11 @@ DATA_DIR = ROOT / "data"
 CKPT_DIR = ROOT / "checkpoints"
 
 ROUTER_BASE = Path("/home/ivaning/prompt-r1r/Prompt-R1/Qwen/Qwen3-4B")
-EVAL_PARQUET = Path(
-    "/home/ivaning/prompt-r1r/Prompt-R1/dataset/eval_data/DAPO-Math.parquet"
+_EVAL_CANDIDATES = (
+    ROOT / "data" / "DAPO-Math.parquet",
+    Path("/home/ivaning/prompt-r1r/Prompt-R1/dataset/eval_data/DAPO-Math.parquet"),
 )
+EVAL_PARQUET = next((p for p in _EVAL_CANDIDATES if p.exists()), _EVAL_CANDIDATES[0])
 BASELINE_RES = Path(
     "/home/ivaning/prompt-r1r/Prompt-R1/baseline-results/gpt-oss-20b/DAPO-Math/res.json"
 )
