@@ -247,12 +247,17 @@ def main() -> None:
             desc="live_baseline",
         )
         write_jsonl(out_dir / "live_baseline.jsonl", baseline)
+        n_err_b = sum(1 for r in baseline if r.get("error"))
+        sample_err_b = next((r.get("error") for r in baseline if r.get("error")), None)
         summary["live_baseline"] = {
             "em": _em(baseline),
             "n": len(baseline),
-            "n_error": sum(1 for r in baseline if r.get("error")),
+            "n_error": n_err_b,
+            "sample_error": sample_err_b,
         }
         print(f"baseline EM={summary['live_baseline']['em']*100:.2f}%", flush=True)
+        if sample_err_b:
+            print(f"baseline sample_error: {sample_err_b}", flush=True)
 
     rr_h = _RoundRobin(solver_urls)
     hintflow = _run_parallel(
@@ -277,13 +282,18 @@ def main() -> None:
             a = ((s.get("review") or {}).get("action")) or "NONE"
             actions[a] = actions.get(a, 0) + 1
 
+    n_err_h = sum(1 for r in hintflow if r.get("error"))
+    sample_err_h = next((r.get("error") for r in hintflow if r.get("error")), None)
     summary["hintflow"] = {
         "em": _em(hintflow),
         "n": len(hintflow),
-        "n_error": sum(1 for r in hintflow if r.get("error")),
+        "n_error": n_err_h,
+        "sample_error": sample_err_h,
         "avg_steps": (sum(n_steps) / len(n_steps)) if n_steps else 0.0,
         "action_counts": actions,
     }
+    if sample_err_h:
+        print(f"hintflow sample_error: {sample_err_h}", flush=True)
     if "live_baseline" in summary:
         summary["hintflow_vs_live_baseline"] = (
             summary["hintflow"]["em"] - summary["live_baseline"]["em"]
