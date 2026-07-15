@@ -39,7 +39,7 @@ huggingface-cli download ivaning0919/pagent-hintflow-dpo-v2-adapter \
 
 依赖：Python、`torch`、`transformers`、`peft`、`openai`、`vllm`（serve）、`tqdm`。评测数据：`data/DAPO-Math.parquet`（128）。
 
-**单卡 H100 一键评测 notebook**：`HintFlow/eval_dpo_v2_h100.ipynb`（clone → 装依赖 → 下 OSS+orch → 同卡 serve → `eval_hintflow.py`）。
+**Colab 单卡 G4（96GB）一键评测 notebook**：`HintFlow/eval_dpo_v2_h100.ipynb`（clone → 装依赖 → 下 OSS+orch → 同卡 serve → `eval_hintflow.py`）。
 
 ---
 
