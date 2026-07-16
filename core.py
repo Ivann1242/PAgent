@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 import random
 import re
-import string
+from decimal import Decimal, InvalidOperation
+from fractions import Fraction
 from pathlib import Path
 
 import pandas as pd
@@ -185,21 +186,66 @@ def _extract_boxed(text: str) -> str | None:
     return text[i : j - 1].strip()
 
 
+def _clean_answer_span(text: str) -> str:
+    span = (text or "").strip()
+    for _ in range(3):
+        changed = False
+        if span.startswith("**") and span.endswith("**") and len(span) > 4:
+            span = span[2:-2].strip()
+            changed = True
+        for left, right in (
+            ("\\(", "\\)"),
+            ("\\[", "\\]"),
+            ("$", "$"),
+        ):
+            if span.startswith(left) and span.endswith(right):
+                span = span[len(left) : -len(right)].strip()
+                changed = True
+        boxed = _extract_boxed(span)
+        if boxed is not None and span.lstrip().startswith("\\boxed{"):
+            span = boxed.strip()
+            changed = True
+        if not changed:
+            break
+    span = span.strip().strip("*").strip()
+    return span.rstrip(" \t\r\n")
+
+
 def extract_final_answer(text: str) -> str:
-    m = re.findall(r"Final Answer:\s*(.+)", text, re.IGNORECASE)
-    if m:
-        return m[-1].strip()
+    # Supports plain, Markdown-bold, boxed, and next-line final answers.
+    label = re.compile(
+        r"(?:^|\n)\s*(?:\*\*)?\s*Final\s+Answer\s*:\s*(?:\*\*)?",
+        re.IGNORECASE,
+    )
+    matches = list(label.finditer(text))
+    if matches:
+        tail = text[matches[-1].end() :].lstrip()
+        if tail.startswith("\\[") and "\\]" in tail:
+            candidate = tail[: tail.find("\\]") + 2]
+        elif tail.startswith("\\(") and "\\)" in tail:
+            candidate = tail[: tail.find("\\)") + 2]
+        elif tail.startswith("\\boxed{"):
+            boxed = _extract_boxed(tail)
+            candidate = boxed if boxed is not None else tail.splitlines()[0]
+        else:
+            candidate = next(
+                (line.strip() for line in tail.splitlines() if line.strip()),
+                "",
+            )
+        candidate = _clean_answer_span(candidate)
+        if candidate:
+            return candidate
     m = re.findall(r"<answer>(.*?)</answer>", text, re.DOTALL)
     if m:
-        return m[-1].strip()
+        return _clean_answer_span(m[-1])
     boxed = _extract_boxed(text)
     if boxed is not None:
         # strip trivial wrappers like xyz=1004
         boxed = re.sub(r"^[A-Za-z]+\s*=\s*", "", boxed).strip()
-        return boxed
+        return _clean_answer_span(boxed)
     m = re.findall(r"^Answer:\s*(.+)$", text, re.MULTILINE | re.IGNORECASE)
     if m:
-        return m[-1].strip()
+        return _clean_answer_span(m[-1])
     return text.strip()
 
 
@@ -220,19 +266,56 @@ def has_parseable_answer(text: str) -> bool:
 
 
 def normalize_answer(s: str) -> str:
-    def remove_articles(t: str) -> str:
-        return re.sub(r"\b(a|an|the)\b", " ", t)
+    """Normalize presentation while preserving mathematical structure and signs."""
+    text = (s or "").strip().lower()
+    text = text.replace("\\left", "").replace("\\right", "")
+    text = text.replace("\\dfrac", "\\frac").replace("\\tfrac", "\\frac")
+    text = text.replace("−", "-").replace("–", "-")
+    text = re.sub(r"^\s*(?:final\s+)?answer\s*[:=]\s*", "", text)
+    for left, right in (("\\(", "\\)"), ("\\[", "\\]"), ("$", "$"), ("**", "**")):
+        if text.startswith(left) and text.endswith(right) and len(text) >= len(left) + len(right):
+            text = text[len(left) : len(text) - len(right)].strip()
+    text = text.rstrip(" \t\r\n.,;")
+    text = re.sub(r"\s+", "", text)
+    return text
 
-    def fix_ws(t: str) -> str:
-        return " ".join(t.split())
 
-    def remove_punc(t: str) -> str:
-        return "".join(c for c in t if c not in set(string.punctuation))
-
-    return fix_ws(remove_articles(remove_punc(s.lower())))
+def _numeric_answer(s: str) -> Fraction | None:
+    text = normalize_answer(s)
+    if re.fullmatch(r"[+-]?\d{1,3}(?:,\d{3})+(?:\.\d+)?", text):
+        text = text.replace(",", "")
+    # Simple scalar LaTeX fractions cover the dominant DAPO answer format.
+    match = re.fullmatch(
+        r"([+-]?)\\frac\{([+-]?\d+(?:\.\d+)?)\}\{([+-]?\d+(?:\.\d+)?)\}",
+        text,
+    )
+    if match:
+        sign = -1 if match.group(1) == "-" else 1
+        try:
+            return sign * Fraction(Decimal(match.group(2))) / Fraction(
+                Decimal(match.group(3))
+            )
+        except (InvalidOperation, ZeroDivisionError):
+            return None
+    if re.fullmatch(r"[+-]?\d+\s*/\s*[+-]?\d+", text):
+        numerator, denominator = text.split("/", 1)
+        try:
+            return Fraction(int(numerator), int(denominator))
+        except (ValueError, ZeroDivisionError):
+            return None
+    if re.fullmatch(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?", text):
+        try:
+            return Fraction(Decimal(text))
+        except InvalidOperation:
+            return None
+    return None
 
 
 def exact_match(pred: str, gold: str) -> int:
+    pred_number = _numeric_answer(pred)
+    gold_number = _numeric_answer(gold)
+    if pred_number is not None and gold_number is not None:
+        return int(pred_number == gold_number)
     return int(normalize_answer(pred) == normalize_answer(gold))
 
 

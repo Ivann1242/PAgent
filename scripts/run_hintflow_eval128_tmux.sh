@@ -3,9 +3,10 @@
 set -euo pipefail
 cd /home/ivaning/PAgent
 
-SESSION=pagent-hintflow-eval128
-LOG=logs/eval-hintflow-128.log
-OUT=checkpoints/eval_hintflow_128
+MODE=${MODE:-retained}
+SESSION=${SESSION:-pagent-hintflow-${MODE}-eval128}
+LOG=${LOG:-logs/eval-hintflow-${MODE}-128.log}
+OUT=${OUT:-checkpoints/eval_hintflow_${MODE}_128}
 mkdir -p logs "$OUT"
 
 if tmux has-session -t "$SESSION" 2>/dev/null; then
@@ -21,6 +22,8 @@ tmux new-session -d -s "$SESSION" bash -lc "
     --workers 32 \
     --solver-urls http://127.0.0.1:8006/v1,http://127.0.0.1:8007/v1,http://127.0.0.1:8008/v1,http://127.0.0.1:8009/v1 \
     --orch-url http://127.0.0.1:8086/v1 \
+    --runtime-mode $MODE \
+    --orch-temperature 0 \
     --out-dir $OUT \
     2>&1 | tee $LOG
   echo '=== DONE ===' | tee -a $LOG
