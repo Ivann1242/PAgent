@@ -26,7 +26,7 @@ from core import (  # noqa: E402
 )
 
 ORCH_URL = "http://127.0.0.1:8086/v1"
-ORCH_MODEL = "qwen3-4b"
+ORCH_MODEL = "qwen3-4b-blind-ff-17k"
 SOLVER_URL = "http://127.0.0.1:8006/v1"
 SOLVER_MODEL = "gpt-oss-20b"
 
@@ -150,7 +150,7 @@ class HintFlowOneAgent:
         orch_model: str = ORCH_MODEL,
         solver_url: str = SOLVER_URL,
         solver_model: str = SOLVER_MODEL,
-        solver_max_tokens: int = 4096,
+        solver_max_tokens: int = 20000,
         orch_temperature: float = 0.0,
         solver_temperature: float = 0.0,
         replace_threshold: float = 0.90,

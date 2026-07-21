@@ -1,0 +1,37 @@
+{
+  "counterfactual": "",
+  "action_cost": 0.02,
+  "seed": 42,
+  "excluded_data_files": [
+    "/home/ivaning/PAgent/data/DAPO-Math.parquet"
+  ],
+  "n_excluded_rows": 0,
+  "n_unknown_problem_hashes": 0,
+  "split_manifest": "/home/ivaning/PAgent/checkpoints/residual_splits/manifest.json",
+  "splits": {
+    "train": {
+      "n": 16497,
+      "by_task": {
+        "correctness": 13368,
+        "selection": 3129
+      },
+      "n_problems": 674
+    },
+    "val": {
+      "n": 884,
+      "by_task": {
+        "correctness": 745,
+        "selection": 139
+      },
+      "n_problems": 29
+    },
+    "test": {
+      "n": 1627,
+      "by_task": {
+        "correctness": 1331,
+        "selection": 296
+      },
+      "n_problems": 63
+    }
+  }
+}

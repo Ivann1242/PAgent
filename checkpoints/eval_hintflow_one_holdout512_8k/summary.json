@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "data_file": "data/dapo_holdout_512.jsonl",
+    "n": 512,
+    "workers": 1,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b-blind-ff-17k",
+    "solver_model": "gpt-oss-20b",
+    "solver_max_tokens": 8192,
+    "selector_mode": "orch",
+    "replace_threshold": 0.9,
+    "seed": 41,
+    "elapsed_sec": 15160.8
+  },
+  "hintflow_one": {
+    "em": 0.783203125,
+    "baseline_em": 0.7265625,
+    "challenger_em": 0.69921875,
+    "paired_delta": 0.056640625,
+    "recovered": 31,
+    "harmed": 2,
+    "baseline_correct_retention": 0.9946236559139785,
+    "replace_count": 50,
+    "n_error": 0,
+    "sample_error": null
+  }
+}

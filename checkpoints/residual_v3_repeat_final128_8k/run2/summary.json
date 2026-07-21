@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "data_file": "checkpoints/residual_splits/final.jsonl",
+    "n": 128,
+    "workers": 4,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b",
+    "solver_model": "gpt-oss-20b",
+    "model_tag": "checkpoints/residual_cycles/residual_v3/merged",
+    "max_solver_calls": 7,
+    "solver_max_tokens": 8192,
+    "branch_max_tokens": 2048,
+    "branch_temperature": 0.2,
+    "policy_mode": "adaptive",
+    "selector_mode": "orch",
+    "feedback_mode": "trained",
+    "replace_threshold": 0.7,
+    "seed": 1042,
+    "config_hash": "2793647cfe533c4167f71c10890569f675aa284471fb96a08d334dd33004aa45",
+    "elapsed_sec": 1431.9
+  },
+  "schema": "residual",
+  "n": 128,
+  "n_error": 0,
+  "baseline_em": 0.515625,
+  "final_em": 0.5234375,
+  "paired_delta": 0.0078125,
+  "paired_delta_bootstrap_95ci": [
+    0.0,
+    0.0234375
+  ],
+  "any_candidate_oracle_em": 0.53125,
+  "oracle_headroom_vs_baseline": 0.015625,
+  "selector_oracle_gap": 0.0078125,
+  "baseline_correct": 66,
+  "baseline_wrong": 62,
+  "recovered_wrong_to_right": 1,
+  "harmed_right_to_wrong": 0,
+  "net_flips": 1,
+  "baseline_correct_retention": 1.0,
+  "baseline_wrong_recovery_rate": 0.016129032258064516,
+  "oracle_recoverable_baseline_errors": 2,
+  "avg_solver_calls": 2.578125,
+  "selector_strict_accuracy": 0.9565217391304348,
+  "selector_strict_n": 23,
+  "action_stats": {
+    "TARGETED_CHECK": {
+      "attempts": 144,
+      "candidate_correct": 16,
+      "local_improve": 1,
+      "local_harm": 13,
+      "selected": 14,
+      "candidate_accuracy": 0.1111111111111111,
+      "local_recovery_rate": 0.006944444444444444
+    },
+    "VERIFY_REPAIR": {
+      "attempts": 27,
+      "candidate_correct": 2,
+      "local_improve": 0,
+      "local_harm": 3,
+      "selected": 0,
+      "candidate_accuracy": 0.07407407407407407,
+      "local_recovery_rate": 0.0
+    },
+    "ALTERNATE_SOLVE": {
+      "attempts": 31,
+      "candidate_correct": 5,
+      "local_improve": 1,
+      "local_harm": 5,
+      "selected": 0,
+      "candidate_accuracy": 0.16129032258064516,
+      "local_recovery_rate": 0.03225806451612903
+    }
+  }
+}

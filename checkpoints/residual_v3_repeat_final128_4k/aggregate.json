@@ -1,0 +1,65 @@
+{
+  "n_runs": 4,
+  "baseline_em_pct": [
+    44.53,
+    40.62,
+    43.75,
+    43.75
+  ],
+  "final_em_pct": [
+    46.88,
+    47.66,
+    47.66,
+    48.44
+  ],
+  "paired_delta_pp": [
+    2.34,
+    7.03,
+    3.91,
+    4.69
+  ],
+  "mean_baseline_em": 0.431640625,
+  "mean_final_em": 0.4765625,
+  "mean_paired_delta": 0.044921875,
+  "stdev_baseline_em": 0.017323092051627697,
+  "stdev_final_em": 0.00637887953849786,
+  "stdev_paired_delta": 0.01953125,
+  "runs": [
+    {
+      "run": 1,
+      "baseline_em": 0.4453125,
+      "final_em": 0.46875,
+      "paired_delta": 0.0234375,
+      "recovered": 4,
+      "harmed": 1,
+      "retention": 0.9824561403508771
+    },
+    {
+      "run": 2,
+      "baseline_em": 0.40625,
+      "final_em": 0.4765625,
+      "paired_delta": 0.0703125,
+      "recovered": 9,
+      "harmed": 0,
+      "retention": 1.0
+    },
+    {
+      "run": 3,
+      "baseline_em": 0.4375,
+      "final_em": 0.4765625,
+      "paired_delta": 0.0390625,
+      "recovered": 5,
+      "harmed": 0,
+      "retention": 1.0
+    },
+    {
+      "run": 4,
+      "baseline_em": 0.4375,
+      "final_em": 0.484375,
+      "paired_delta": 0.046875,
+      "recovered": 6,
+      "harmed": 0,
+      "retention": 1.0
+    }
+  ]
+}

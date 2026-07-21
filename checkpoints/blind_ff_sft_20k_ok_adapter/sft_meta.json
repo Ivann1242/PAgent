@@ -1,0 +1,9 @@
+{
+  "labels_file": "checkpoints/blind_hint_17k/oracle_labels_dedup_20k_ok.jsonl",
+  "n_train": 1257,
+  "n_val": 139,
+  "epochs": 3,
+  "batch_size": 4,
+  "lr": 2e-05,
+  "mode": "freeform_sft"
+}

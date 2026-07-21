@@ -1,0 +1,23 @@
+{
+  "config_hash": "013ad76a2b9a37f19df61b1bb4ea1356c7a39446484f8db2867f6b675bdb36c7",
+  "config": {
+    "data_file": "/home/ivaning/PAgent/data/DAPO-Math.parquet",
+    "data_size": 40027,
+    "data_mtime_ns": 1784080314839978961,
+    "limit": 128,
+    "offset": 0,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b",
+    "solver_model": "gpt-oss-20b",
+    "max_solver_calls": 7,
+    "branch_temperature": 0.2,
+    "policy_mode": "fixed",
+    "selector_mode": "keep",
+    "feedback_mode": "json",
+    "replace_threshold": 0.7,
+    "seed": 42
+  }
+}

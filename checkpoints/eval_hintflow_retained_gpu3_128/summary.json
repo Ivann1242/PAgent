@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "data_file": "data/DAPO-Math.parquet",
+    "n": 128,
+    "workers": 4,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b",
+    "solver_model": "gpt-oss-20b",
+    "solver_max_tokens": 4096,
+    "solver_budget_note": "solver_max_tokens is a per-call cap; retained HintFlow may use up to max_steps calls including baseline, while live baseline uses one",
+    "runtime_mode": "retained",
+    "orch_temperature": 0.0,
+    "batch_per_gpu_target": 8,
+    "n_gpus": 1,
+    "elapsed_sec": 2707.1
+  },
+  "live_baseline": {
+    "em": 0.421875,
+    "n": 128,
+    "n_error": 0,
+    "sample_error": null
+  },
+  "hintflow": {
+    "em": 0.46875,
+    "n": 128,
+    "n_error": 0,
+    "sample_error": null,
+    "avg_steps": 3.7734375,
+    "avg_solver_turns": 4.7734375,
+    "action_counts": {
+      "REPLAN": 198,
+      "INJECT": 54,
+      "RETRY": 96,
+      "FINALIZE": 84,
+      "NO_HINT": 51
+    },
+    "parseable_final_rate": 0.8125,
+    "lost_correct_before_final": 11,
+    "avg_retries": 0.4140625,
+    "avg_replans": 0.75,
+    "baseline_correct_retention": 0.88
+  },
+  "hintflow_vs_live_baseline": 0.046875,
+  "paired": {
+    "hintflow_only_correct": 16,
+    "baseline_only_correct": 10
+  }
+}

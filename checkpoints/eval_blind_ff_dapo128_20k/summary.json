@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "data": "/home/ivaning/PAgent/data/DAPO-Math.parquet",
+    "n": 128,
+    "max_tokens": 20000,
+    "workers": 1,
+    "router_model": "qwen3-4b-blind-ff-17k"
+  },
+  "live_baseline": {
+    "em": 0.546875,
+    "format_accuracy": 0.84375,
+    "avg_reward": 0.546875,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 128
+    },
+    "per_action_em": {
+      "baseline": 0.546875
+    },
+    "n": 128
+  },
+  "ff_router": {
+    "em": 0.5625,
+    "format_accuracy": 0.8125,
+    "avg_reward": 0.5546875,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "freeform": 128
+    },
+    "per_action_em": {},
+    "n": 128
+  },
+  "ff_router_vs_live_baseline": 0.015625
+}

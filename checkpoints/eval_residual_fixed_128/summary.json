@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "data_file": "data/DAPO-Math.parquet",
+    "n": 128,
+    "workers": 4,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b",
+    "solver_model": "gpt-oss-20b",
+    "max_solver_calls": 7,
+    "policy_mode": "fixed",
+    "selector_mode": "keep",
+    "feedback_mode": "json",
+    "replace_threshold": 0.7,
+    "seed": 42,
+    "elapsed_sec": 7077.9
+  },
+  "schema": "residual",
+  "n": 82,
+  "n_error": 46,
+  "baseline_em": 0.47560975609756095,
+  "final_em": 0.47560975609756095,
+  "paired_delta": 0,
+  "paired_delta_bootstrap_95ci": [
+    0.0,
+    0.0
+  ],
+  "any_candidate_oracle_em": 0.6097560975609756,
+  "oracle_headroom_vs_baseline": 0.13414634146341464,
+  "selector_oracle_gap": 0.13414634146341464,
+  "baseline_correct": 39,
+  "baseline_wrong": 43,
+  "recovered_wrong_to_right": 0,
+  "harmed_right_to_wrong": 0,
+  "net_flips": 0,
+  "baseline_correct_retention": 1.0,
+  "baseline_wrong_recovery_rate": 0.0,
+  "oracle_recoverable_baseline_errors": 11,
+  "avg_solver_calls": 7,
+  "selector_strict_accuracy": 0.5614035087719298,
+  "selector_strict_n": 57,
+  "action_stats": {
+    "VERIFY_REPAIR": {
+      "attempts": 164,
+      "candidate_correct": 79,
+      "local_improve": 7,
+      "local_harm": 6,
+      "selected": 0,
+      "candidate_accuracy": 0.4817073170731707,
+      "local_recovery_rate": 0.042682926829268296
+    },
+    "ALTERNATE_SOLVE": {
+      "attempts": 164,
+      "candidate_correct": 74,
+      "local_improve": 10,
+      "local_harm": 14,
+      "selected": 0,
+      "candidate_accuracy": 0.45121951219512196,
+      "local_recovery_rate": 0.06097560975609756
+    },
+    "TARGETED_CHECK": {
+      "attempts": 164,
+      "candidate_correct": 74,
+      "local_improve": 8,
+      "local_harm": 12,
+      "selected": 0,
+      "candidate_accuracy": 0.45121951219512196,
+      "local_recovery_rate": 0.04878048780487805
+    }
+  }
+}

@@ -160,6 +160,9 @@ def train_ff(
     adapter_dir: Path | None = None,
     rollout_log: Path | None = None,
     start_step: int = 1,
+    reward_repeats: int = 1,
+    reward_max_tokens: int = 8192,
+    reward_temperature: float = 0.0,
 ) -> Path:
     import json
     import os
@@ -211,8 +214,15 @@ def train_ff(
             target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
                             "gate_proj", "up_proj", "down_proj"],
         ))
+    reward_repeats = max(1, int(reward_repeats))
     print(
         f"hint gen: batched num_return_sequences={k}, gen_batch_size={gen_batch_size}",
+        flush=True,
+    )
+    print(
+        f"reward: repeats={reward_repeats} max_tokens={reward_max_tokens} "
+        f"temperature={reward_temperature} urls={len(pool.urls)} "
+        f"rollout_workers={rollout_workers}",
         flush=True,
     )
     if hasattr(model, "gradient_checkpointing_enable"):
@@ -234,18 +244,24 @@ def train_ff(
             "batch_size": batch_size,
             "k": k,
             "gen_batch_size": gen_batch_size,
+            "reward_repeats": reward_repeats,
+            "reward_max_tokens": reward_max_tokens,
+            "reward_temperature": reward_temperature,
         }, indent=2) + "\n")
 
-    def _rollout_task(item):
-        row, comp = item
-        hint, _ = parse_optimizer_output(comp)
+    def _rollout_once(row: dict, hint: str, *, small_output: str = "") -> dict:
         client = pool.next_client()
         r = rollout_ff(
             client, cfg.answer_model, row["problem"], row["gold"], hint,
-            small_output=comp,
+            small_output=small_output,
+            max_tokens=reward_max_tokens,
+            temperature=reward_temperature,
         )
         r["id"] = row["id"]
-        return row["id"], comp, r
+        r["reward_temperature"] = reward_temperature
+        r["reward_max_tokens"] = reward_max_tokens
+        r["reward_repeats"] = reward_repeats
+        return r
 
     for step in range(start_step, max_steps + 1):
         batch = [rows[(cursor + i) % len(rows)] for i in range(batch_size)]
@@ -291,16 +307,48 @@ def train_ff(
                 model.train()
         _maybe_empty_cache(device)
 
+        # Score unique (qid, hint) only once × reward_repeats, then broadcast.
+        # Identical / colliding hints across K samples share the same averaged EM.
+        unique_jobs: dict[tuple[int, str], dict] = {}
+        comp_to_hint: dict[tuple[int, str], str] = {}
+        for g in groups:
+            row = g["row"]
+            for comp in g["completions"]:
+                hint, _ = parse_optimizer_output(comp)
+                hint_key = hint.strip()
+                comp_to_hint[(row["id"], comp)] = hint_key
+                ukey = (row["id"], hint_key)
+                if ukey not in unique_jobs:
+                    unique_jobs[ukey] = {"row": row, "hint": hint_key, "small_output": comp}
+
         tasks = [
-            (g["row"], comp)
-            for g in groups for comp in g["completions"]
+            (ukey, job, rep_i)
+            for ukey, job in unique_jobs.items()
+            for rep_i in range(reward_repeats)
         ]
-        rollout_map: dict[tuple[int, str], dict] = {}
-        workers = min(rollout_workers, len(tasks))
+        em_lists: dict[tuple[int, str], list[int]] = {ukey: [] for ukey in unique_jobs}
+        workers = max(1, min(rollout_workers, len(tasks)))
+        n_oss_calls = len(tasks)
+        n_unique_hints = len(unique_jobs)
+
+        def _rollout_task(item):
+            ukey, job, rep_i = item
+            r = _rollout_once(job["row"], job["hint"], small_output=job["small_output"])
+            r["repeat_i"] = rep_i
+            r["hint_key"] = job["hint"]
+            return ukey, r
+
         with ThreadPoolExecutor(max_workers=workers) as ex:
-            for qid, comp, r in ex.map(_rollout_task, tasks):
-                rollout_map[(qid, comp)] = r
+            for ukey, r in ex.map(_rollout_task, tasks):
+                em_lists[ukey].append(int(r["em"]))
                 append_jsonl(rollout_log, r)
+
+        reward_map: dict[tuple[int, str], float] = {}
+        em_map: dict[tuple[int, str], float] = {}
+        for ukey, ems in em_lists.items():
+            mean_em = sum(ems) / max(len(ems), 1)
+            reward_map[ukey] = float(mean_em)
+            em_map[ukey] = float(mean_em)
 
         step_skipped = 0
         step_em = 0.0
@@ -310,14 +358,15 @@ def train_ff(
             row = g["row"]
             rewards, ems = [], []
             for comp in g["completions"]:
-                r = rollout_map[(row["id"], comp)]
-                rewards.append(r["reward"])
-                ems.append(r["em"])
+                hint_key = comp_to_hint[(row["id"], comp)]
+                ukey = (row["id"], hint_key)
+                mean_em = em_map[ukey]
+                rewards.append(reward_map[ukey])
+                ems.append(mean_em)
 
             advantages, mean_r, std_r, has_signal = group_advantages(rewards)
             total_groups += 1
             step_em += sum(ems) / len(ems)
-            invalid = sum(parse_optimizer_output(c)[1] is False for c in g["completions"]) / len(g["completions"])
 
             if not has_signal:
                 step_skipped += 1
@@ -341,7 +390,9 @@ def train_ff(
 
         print(
             f"step={step}/{max_steps} batch={batch_size} k={k} gen_batch={gen_batch_size} "
-            f"em={step_em/batch_size:.0%} skip_groups={step_skipped}/{batch_size} "
+            f"repeats={reward_repeats} unique_hints={n_unique_hints}/{batch_size * k} "
+            f"oss_calls={n_oss_calls} em={step_em/batch_size:.0%} "
+            f"skip_groups={step_skipped}/{batch_size} "
             f"pg={step_pg/max(n_pg,1):.3f} grad={grad_norm:.4f}",
             flush=True,
         )

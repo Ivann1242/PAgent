@@ -1,0 +1,43 @@
+{
+  "counterfactual": "checkpoints/residual_feedback_collection/train_turns.jsonl,checkpoints/residual_feedback_collection/dev_turns.jsonl",
+  "action_cost": 0.02,
+  "seed": 42,
+  "excluded_data_files": [
+    "/home/ivaning/PAgent/data/DAPO-Math.parquet"
+  ],
+  "n_excluded_rows": 0,
+  "n_unknown_problem_hashes": 0,
+  "split_manifest": "/home/ivaning/PAgent/checkpoints/residual_splits/manifest.json",
+  "splits": {
+    "train": {
+      "n": 17285,
+      "by_task": {
+        "correctness": 13704,
+        "action": 116,
+        "diagnosis": 114,
+        "selection": 3351
+      },
+      "n_problems": 761
+    },
+    "val": {
+      "n": 1428,
+      "by_task": {
+        "correctness": 983,
+        "action": 68,
+        "diagnosis": 64,
+        "selection": 313
+      },
+      "n_problems": 91
+    },
+    "test": {
+      "n": 1770,
+      "by_task": {
+        "correctness": 1392,
+        "selection": 344,
+        "action": 20,
+        "diagnosis": 14
+      },
+      "n_problems": 72
+    }
+  }
+}

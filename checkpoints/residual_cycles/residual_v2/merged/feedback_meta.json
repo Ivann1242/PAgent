@@ -1,0 +1,102 @@
+{
+  "base_model": "/home/ivaning/prompt-r1r/Prompt-R1/Qwen/Qwen3-4B",
+  "train_file": "checkpoints/residual_feedback_dataset_cf/train.jsonl",
+  "val_file": "checkpoints/residual_feedback_dataset_cf/val.jsonl",
+  "tasks": [
+    "action",
+    "correctness",
+    "diagnosis",
+    "selection"
+  ],
+  "n_train_balanced": 1024,
+  "n_val": 544,
+  "epochs": 1,
+  "batch_size": 2,
+  "grad_accum": 4,
+  "lr": 2e-05,
+  "history": [
+    {
+      "epoch": 1,
+      "loss": 0.3584263455122709,
+      "metrics": {
+        "action": {
+          "n": 64,
+          "accuracy": 0.609375,
+          "balanced_accuracy": 0.5027253668763103,
+          "by_target": {
+            "STOP": {
+              "n": 53,
+              "accuracy": 0.6415094339622641
+            },
+            "TARGETED_CHECK": {
+              "n": 6,
+              "accuracy": 0.6666666666666666
+            },
+            "VERIFY_REPAIR": {
+              "n": 5,
+              "accuracy": 0.2
+            }
+          },
+          "mean_regret": 0.0521875
+        },
+        "correctness": {
+          "n": 64,
+          "accuracy": 0.984375,
+          "balanced_accuracy": 0.9897959183673469,
+          "by_target": {
+            "CORRECT": {
+              "n": 15,
+              "accuracy": 1.0
+            },
+            "INCORRECT": {
+              "n": 49,
+              "accuracy": 0.9795918367346939
+            }
+          },
+          "brier": 0.06452122271394424,
+          "ece": 0.22953072481323034
+        },
+        "selection": {
+          "n": 64,
+          "accuracy": 0.953125,
+          "balanced_accuracy": 0.7416666666666667,
+          "by_target": {
+            "KEEP": {
+              "n": 60,
+              "accuracy": 0.9833333333333333
+            },
+            "REPLACE": {
+              "n": 4,
+              "accuracy": 0.5
+            }
+          },
+          "strict_n": 4,
+          "strict_accuracy": 0.5
+        },
+        "free_generation": {
+          "action": {
+            "n": 6,
+            "valid_rate": 1.0,
+            "accuracy": 0.8333333333333334
+          },
+          "correctness": {
+            "n": 6,
+            "valid_rate": 1.0,
+            "accuracy": 0.8333333333333334
+          },
+          "diagnosis": {
+            "n": 6,
+            "valid_rate": 0.8333333333333334,
+            "accuracy": null
+          },
+          "selection": {
+            "n": 6,
+            "valid_rate": 0.3333333333333333,
+            "accuracy": 0.3333333333333333
+          }
+        }
+      }
+    }
+  ],
+  "gpu": 3
+}

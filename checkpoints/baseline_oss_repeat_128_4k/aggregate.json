@@ -1,0 +1,106 @@
+{
+  "n_runs": 4,
+  "ems": [
+    0.40625,
+    0.4140625,
+    0.4609375,
+    0.390625
+  ],
+  "em_pct": [
+    40.62,
+    41.41,
+    46.09,
+    39.06
+  ],
+  "mean_em": 0.41796875,
+  "stdev_em": 0.030257682392245445,
+  "min_em": 0.390625,
+  "max_em": 0.4609375,
+  "runs": [
+    {
+      "run": 1,
+      "seed": 42,
+      "n": 128,
+      "em": 0.40625,
+      "n_correct": 52,
+      "n_error": 0,
+      "sample_error": null,
+      "only_fa_content": 66,
+      "finish_length": 43,
+      "elapsed_sec": 507.0,
+      "meta": {
+        "data_file": "checkpoints/residual_splits/final.jsonl",
+        "solver_url": "http://127.0.0.1:8006/v1",
+        "solver_model": "gpt-oss-20b",
+        "max_tokens": 4096,
+        "workers": 4,
+        "hint": "",
+        "protocol": "bare_oss_native"
+      }
+    },
+    {
+      "run": 2,
+      "seed": 1042,
+      "n": 128,
+      "em": 0.4140625,
+      "n_correct": 53,
+      "n_error": 0,
+      "sample_error": null,
+      "only_fa_content": 76,
+      "finish_length": 39,
+      "elapsed_sec": 485.6,
+      "meta": {
+        "data_file": "checkpoints/residual_splits/final.jsonl",
+        "solver_url": "http://127.0.0.1:8006/v1",
+        "solver_model": "gpt-oss-20b",
+        "max_tokens": 4096,
+        "workers": 4,
+        "hint": "",
+        "protocol": "bare_oss_native"
+      }
+    },
+    {
+      "run": 3,
+      "seed": 2042,
+      "n": 128,
+      "em": 0.4609375,
+      "n_correct": 59,
+      "n_error": 0,
+      "sample_error": null,
+      "only_fa_content": 74,
+      "finish_length": 39,
+      "elapsed_sec": 489.9,
+      "meta": {
+        "data_file": "checkpoints/residual_splits/final.jsonl",
+        "solver_url": "http://127.0.0.1:8006/v1",
+        "solver_model": "gpt-oss-20b",
+        "max_tokens": 4096,
+        "workers": 4,
+        "hint": "",
+        "protocol": "bare_oss_native"
+      }
+    },
+    {
+      "run": 4,
+      "seed": 3042,
+      "n": 128,
+      "em": 0.390625,
+      "n_correct": 50,
+      "n_error": 0,
+      "sample_error": null,
+      "only_fa_content": 68,
+      "finish_length": 44,
+      "elapsed_sec": 500.0,
+      "meta": {
+        "data_file": "checkpoints/residual_splits/final.jsonl",
+        "solver_url": "http://127.0.0.1:8006/v1",
+        "solver_model": "gpt-oss-20b",
+        "max_tokens": 4096,
+        "workers": 4,
+        "hint": "",
+        "protocol": "bare_oss_native"
+      }
+    }
+  ],
+  "elapsed_sec": 1982.5
+}

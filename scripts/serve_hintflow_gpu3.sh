@@ -9,11 +9,13 @@ OSS_MODEL="${OSS_MODEL_PATH:-/home/ivaning/models/gpt-oss-20b}"
 ORCH_MODEL="${MERGED:-checkpoints/hintflow_dpo_v2_merged}"
 OSS_PORT="${OSS_PORT:-8006}"
 ORCH_PORT="${ORCH_PORT:-8086}"
-OSS_UTIL="${OSS_UTIL:-0.58}"
-ORCH_UTIL="${ORCH_UTIL:-0.18}"
-OSS_MAX_LEN="${OSS_MAX_LEN:-16384}"
+# 20k solver generations need prompt + completion headroom.
+# Keep util low enough to co-locate Blind FF on GPU3 (other jobs may share the card).
+OSS_MAX_LEN="${OSS_MAX_LEN:-32768}"
 ORCH_MAX_LEN="${ORCH_MAX_LEN:-8192}"
-MAX_NUM_SEQS="${MAX_NUM_SEQS:-4}"
+MAX_NUM_SEQS="${MAX_NUM_SEQS:-1}"
+OSS_UTIL="${OSS_UTIL:-0.52}"
+ORCH_UTIL="${ORCH_UTIL:-0.18}"
 
 kill_port() {
   local port=$1

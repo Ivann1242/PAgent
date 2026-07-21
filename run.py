@@ -168,6 +168,11 @@ def main() -> None:
     sp.add_argument("--rollout-log", default=None)
     sp.add_argument("--answer-urls", default=None,
                     help="comma-separated OSS URLs (default: all 4 endpoints)")
+    sp.add_argument("--reward-repeats", type=int, default=1,
+                    help="OSS solve repeats per unique hint; reward = mean EM")
+    sp.add_argument("--reward-max-tokens", type=int, default=8192)
+    sp.add_argument("--reward-temperature", type=float, default=0.0,
+                    help="OSS sampling temperature for reward rollouts (use 0 + repeats)")
 
     sp = sub.add_parser("ff-merge", help="Merge free-form GRPO LoRA adapter")
     sp.add_argument("--adapter-dir", default=None)
@@ -330,6 +335,9 @@ def main() -> None:
             adapter_dir=Path(args.out_dir) if args.out_dir else None,
             rollout_log=Path(args.rollout_log) if args.rollout_log else None,
             start_step=args.start_step,
+            reward_repeats=args.reward_repeats,
+            reward_max_tokens=args.reward_max_tokens,
+            reward_temperature=args.reward_temperature,
         )
     elif args.cmd == "ff-merge":
         merge_ff(

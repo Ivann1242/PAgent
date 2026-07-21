@@ -3,6 +3,9 @@
 **一句话**：one-step Blind Free-Form hint 生成 challenger，再用保守 selector
 决定是否替换 bare OSS baseline，目标是保留 Blind FF 的 recover、压掉 harm。
 
+**Router**：`checkpoints/blind_ff_sft_17k_merged`（served as `qwen3-4b-blind-ff-17k`，~51.6% EM）。
+不要用 HintFlow HQ DPO / `qwen3-4b`。
+
 ## 流程
 
 ```text

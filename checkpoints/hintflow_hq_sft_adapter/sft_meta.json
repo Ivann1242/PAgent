@@ -1,0 +1,51 @@
+{
+  "base_model": "/home/ivaning/prompt-r1r/Prompt-R1/Qwen/Qwen3-4B",
+  "data_file": "checkpoints/hintflow_hq_dataset/sft.jsonl",
+  "split": {
+    "raw": 3587,
+    "clean": 3430,
+    "filtered": 157,
+    "train": 3067,
+    "val": 363,
+    "train_plan": 1090,
+    "train_review": 1977,
+    "val_plan": 130,
+    "val_review": 233
+  },
+  "initial_val": {
+    "loss": 0.15834282636642455,
+    "plan_loss": 0.1483797940340909,
+    "review_loss": 0.16356155758812313,
+    "n": 160
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.1359795641246333,
+      "val": {
+        "loss": 0.14298934936523439,
+        "plan_loss": 0.13618607954545456,
+        "review_loss": 0.14655296688988095,
+        "n": 160
+      },
+      "updates": 384
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.11920233655628668,
+      "val": {
+        "loss": 0.14237937480211257,
+        "plan_loss": 0.13410866477272726,
+        "review_loss": 0.14671165148417156,
+        "n": 160
+      },
+      "updates": 768
+    }
+  ],
+  "epochs": 2,
+  "batch_size": 2,
+  "grad_accum": 4,
+  "lr": 2e-05,
+  "max_length": 4096,
+  "seed": 42
+}

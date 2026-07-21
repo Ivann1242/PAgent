@@ -1,0 +1,19 @@
+{
+  "data_file": "checkpoints/residual_splits/dev.jsonl",
+  "out": "checkpoints/residual_feedback_collection/dev_turns.jsonl",
+  "n": 64,
+  "n_error": 0,
+  "error_rate": 0.0,
+  "baseline_em": 0.546875,
+  "oracle_em": 0.671875,
+  "oracle_headroom": 0.125,
+  "actions": [
+    "VERIFY_REPAIR",
+    "ALTERNATE_SOLVE",
+    "TARGETED_CHECK"
+  ],
+  "samples_per_action": 2,
+  "branch_temperature": 0.2,
+  "config_hash": "28bab664a0acbbee4a5de9b2643558d2d2356ed20c7161e708cd29bc9275a501",
+  "elapsed_sec": 981.2
+}

@@ -1,0 +1,50 @@
+{
+  "tree_files": [
+    "checkpoints/hintflow_trees_v2/trees.jsonl",
+    "checkpoints/hintflow_trees_2k/trees.jsonl"
+  ],
+  "trees_seen": 1310,
+  "trees_valid": 1310,
+  "config": {
+    "leaf_threshold": 0.5,
+    "mode": "hard",
+    "min_gap": 0.5,
+    "min_leaves": 2,
+    "min_correct": 1,
+    "max_pairs_per_tree": 3,
+    "max_review_per_tree": 2
+  },
+  "dpo_pairs": {
+    "n": 1133,
+    "by_task": {
+      "review": 855,
+      "plan": 278
+    },
+    "low_intervention": 15,
+    "chosen_action_dist": {
+      "INJECT": 417,
+      "None": 278,
+      "REPLAN": 276,
+      "RETRY": 124,
+      "NO_HINT": 38
+    },
+    "separation_mean": 0.5625883960297151,
+    "separation_min": 0.015625,
+    "out": "checkpoints/hintflow_hq_dataset/dpo_pairs.jsonl"
+  },
+  "sft": {
+    "n": 3587,
+    "by_source": {
+      "winning_path": 3587
+    },
+    "action_dist": {
+      "None": 1377,
+      "INJECT": 748,
+      "FINALIZE": 742,
+      "NO_HINT": 137,
+      "REPLAN": 466,
+      "RETRY": 117
+    },
+    "out": "checkpoints/hintflow_hq_dataset/sft.jsonl"
+  }
+}

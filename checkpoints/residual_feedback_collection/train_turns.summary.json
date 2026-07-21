@@ -1,0 +1,19 @@
+{
+  "data_file": "checkpoints/residual_splits/train.jsonl",
+  "out": "checkpoints/residual_feedback_collection/train_turns.jsonl",
+  "n": 128,
+  "n_error": 0,
+  "error_rate": 0.0,
+  "baseline_em": 0.6484375,
+  "oracle_em": 0.734375,
+  "oracle_headroom": 0.0859375,
+  "actions": [
+    "VERIFY_REPAIR",
+    "ALTERNATE_SOLVE",
+    "TARGETED_CHECK"
+  ],
+  "samples_per_action": 2,
+  "branch_temperature": 0.2,
+  "config_hash": "14d37343e8876e3a722e5d6f2d346b55249eb492d79942b2808ee84425e361bb",
+  "elapsed_sec": 1597.4
+}

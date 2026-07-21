@@ -28,6 +28,8 @@ from one_agent import (  # noqa: E402
     HintFlowOneAgent,
 )
 
+# Default router is Blind FF-SFT 17K full (~51.6% EM), not HintFlow HQ.
+
 DEFAULT_SOLVER_URLS = ["http://127.0.0.1:8006/v1"]
 
 
@@ -118,7 +120,7 @@ def main() -> None:
     p.add_argument("--orch-url", default=ORCH_URL)
     p.add_argument("--orch-model", default=ORCH_MODEL)
     p.add_argument("--solver-model", default=SOLVER_MODEL)
-    p.add_argument("--solver-max-tokens", type=int, default=4096)
+    p.add_argument("--solver-max-tokens", type=int, default=20000)
     p.add_argument(
         "--selector-mode",
         choices=("orch", "keep", "replace"),

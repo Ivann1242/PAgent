@@ -1,0 +1,27 @@
+{
+  "config_hash": "0d5c089c05d7469496b205b59625b082740c8577dd5a2d9dbad10fff370fbc5e",
+  "config": {
+    "data_file": "/home/ivaning/PAgent/checkpoints/residual_splits/final.jsonl",
+    "data_size": 46337,
+    "data_mtime_ns": 1784095011888042212,
+    "limit": 128,
+    "offset": 0,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b",
+    "solver_model": "gpt-oss-20b",
+    "model_tag": "checkpoints/residual_cycles/residual_v3/merged",
+    "max_solver_calls": 7,
+    "solver_max_tokens": 4096,
+    "branch_max_tokens": 2048,
+    "request_timeout": 600.0,
+    "branch_temperature": 0.2,
+    "policy_mode": "adaptive",
+    "selector_mode": "orch",
+    "feedback_mode": "trained",
+    "replace_threshold": 0.7,
+    "seed": 3042
+  }
+}

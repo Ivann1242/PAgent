@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "data_file": "data/DAPO-Math.parquet",
+    "n": 128,
+    "workers": 4,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b",
+    "solver_model": "gpt-oss-20b",
+    "solver_max_tokens": 4096,
+    "selector_mode": "orch",
+    "replace_threshold": 0.9,
+    "seed": 41,
+    "elapsed_sec": 1048.5
+  },
+  "hintflow_one": {
+    "em": 0.5,
+    "baseline_em": 0.4296875,
+    "challenger_em": 0.453125,
+    "paired_delta": 0.0703125,
+    "recovered": 10,
+    "harmed": 1,
+    "baseline_correct_retention": 0.9818181818181818,
+    "replace_count": 41,
+    "n_error": 0,
+    "sample_error": null
+  }
+}

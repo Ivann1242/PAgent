@@ -1,0 +1,64 @@
+{
+  "schema": "residual",
+  "n": 34,
+  "n_error": 0,
+  "baseline_em": 0.7352941176470589,
+  "final_em": 0.8235294117647058,
+  "paired_delta": 0.08823529411764706,
+  "paired_delta_bootstrap_95ci": [
+    0.0,
+    0.20588235294117646
+  ],
+  "any_candidate_oracle_em": 0.8823529411764706,
+  "oracle_headroom_vs_baseline": 0.14705882352941177,
+  "selector_oracle_gap": 0.058823529411764705,
+  "baseline_correct": 25,
+  "baseline_wrong": 9,
+  "recovered_wrong_to_right": 3,
+  "harmed_right_to_wrong": 0,
+  "net_flips": 3,
+  "baseline_correct_retention": 1.0,
+  "baseline_wrong_recovery_rate": 0.3333333333333333,
+  "oracle_recoverable_baseline_errors": 5,
+  "avg_solver_calls": 7,
+  "selector_strict_accuracy": 0.4230769230769231,
+  "selector_strict_n": 26,
+  "action_stats": {
+    "VERIFY_REPAIR": {
+      "attempts": 68,
+      "candidate_correct": 53,
+      "local_improve": 6,
+      "local_harm": 3,
+      "selected": 0,
+      "candidate_accuracy": 0.7794117647058824,
+      "local_recovery_rate": 0.08823529411764706
+    },
+    "ALTERNATE_SOLVE": {
+      "attempts": 68,
+      "candidate_correct": 52,
+      "local_improve": 4,
+      "local_harm": 2,
+      "selected": 0,
+      "candidate_accuracy": 0.7647058823529411,
+      "local_recovery_rate": 0.058823529411764705
+    },
+    "TARGETED_CHECK": {
+      "attempts": 68,
+      "candidate_correct": 49,
+      "local_improve": 5,
+      "local_harm": 6,
+      "selected": 0,
+      "candidate_accuracy": 0.7205882352941176,
+      "local_recovery_rate": 0.07352941176470588
+    }
+  },
+  "meta": {
+    "input": "checkpoints/eval_residual_fixed_dev64/residual.jsonl",
+    "input_n": 64,
+    "skipped_input_errors": 30,
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b",
+    "model_tag": "checkpoints/residual_cycles/residual_v3/merged",
+    "replace_threshold": 0.7
+  }
+}

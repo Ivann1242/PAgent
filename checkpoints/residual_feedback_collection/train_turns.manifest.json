@@ -1,0 +1,30 @@
+{
+  "config_hash": "14d37343e8876e3a722e5d6f2d346b55249eb492d79942b2808ee84425e361bb",
+  "config": {
+    "data_file": "/home/ivaning/PAgent/checkpoints/residual_splits/train.jsonl",
+    "trajectory_source": "",
+    "data_size": 19531824,
+    "data_mtime_ns": 1784095011881082394,
+    "limit": 128,
+    "offset": 0,
+    "hash_subset": 0,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b",
+    "solver_model": "gpt-oss-20b",
+    "actions": [
+      "VERIFY_REPAIR",
+      "ALTERNATE_SOLVE",
+      "TARGETED_CHECK"
+    ],
+    "samples_per_action": 2,
+    "branch_temperature": 0.2,
+    "solver_max_tokens": 4096,
+    "branch_max_tokens": 2048,
+    "request_timeout": 600.0,
+    "branch_only_if_baseline_wrong": true,
+    "seed": 42
+  }
+}

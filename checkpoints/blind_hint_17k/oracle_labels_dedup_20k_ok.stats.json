@@ -1,0 +1,10 @@
+{
+  "source_labels": "checkpoints/blind_hint_17k/oracle_labels_dedup.jsonl",
+  "filter_eval": "checkpoints/eval_idist_oraclehint_20k/oracle_hint.jsonl",
+  "n_source": 1809,
+  "n_kept": 1396,
+  "n_dropped": 413,
+  "keep_rate": 0.7716970702045329,
+  "criterion": "id in oracle_hint@20k with em==1",
+  "out": "checkpoints/blind_hint_17k/oracle_labels_dedup_20k_ok.jsonl"
+}

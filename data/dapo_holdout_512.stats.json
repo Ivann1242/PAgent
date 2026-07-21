@@ -1,0 +1,20 @@
+{
+  "out_file": "data/dapo_holdout_512.jsonl",
+  "n": 512,
+  "prepare_seed": 42,
+  "train_size": 17000,
+  "val_size": 256,
+  "skip_prefix": 17256,
+  "scanned_after_prefix": 1490,
+  "skipped_blocked_or_dup": 978,
+  "blocked_from_train": 17000,
+  "blocked_from_val": 256,
+  "blocked_from_dapo128": 128,
+  "overlap_recheck_train": 0,
+  "overlap_recheck_val": 0,
+  "overlap_recheck_dapo128": 0,
+  "id_range": [
+    17256,
+    18745
+  ]
+}

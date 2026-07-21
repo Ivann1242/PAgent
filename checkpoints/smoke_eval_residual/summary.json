@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "data_file": "data/DAPO-Math.parquet",
+    "n": 2,
+    "workers": 1,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b",
+    "solver_model": "gpt-oss-20b",
+    "max_solver_calls": 3,
+    "policy_mode": "fixed",
+    "selector_mode": "orch",
+    "feedback_mode": "json",
+    "replace_threshold": 0.7,
+    "seed": 42,
+    "elapsed_sec": 33.6
+  },
+  "schema": "residual",
+  "n": 2,
+  "n_error": 0,
+  "baseline_em": 0.5,
+  "final_em": 0.5,
+  "paired_delta": 0,
+  "paired_delta_bootstrap_95ci": [
+    0.0,
+    0.0
+  ],
+  "any_candidate_oracle_em": 0.5,
+  "oracle_headroom_vs_baseline": 0,
+  "selector_oracle_gap": 0,
+  "baseline_correct": 1,
+  "baseline_wrong": 1,
+  "recovered_wrong_to_right": 0,
+  "harmed_right_to_wrong": 0,
+  "net_flips": 0,
+  "baseline_correct_retention": 1.0,
+  "baseline_wrong_recovery_rate": 0.0,
+  "oracle_recoverable_baseline_errors": 0,
+  "avg_solver_calls": 3,
+  "selector_strict_accuracy": 0.0,
+  "selector_strict_n": 0,
+  "action_stats": {
+    "VERIFY_REPAIR": {
+      "attempts": 2,
+      "candidate_correct": 1,
+      "local_improve": 0,
+      "local_harm": 0,
+      "selected": 0,
+      "candidate_accuracy": 0.5,
+      "local_recovery_rate": 0.0
+    },
+    "ALTERNATE_SOLVE": {
+      "attempts": 2,
+      "candidate_correct": 1,
+      "local_improve": 0,
+      "local_harm": 0,
+      "selected": 1,
+      "candidate_accuracy": 0.5,
+      "local_recovery_rate": 0.0
+    }
+  }
+}

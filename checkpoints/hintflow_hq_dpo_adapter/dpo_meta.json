@@ -1,0 +1,31 @@
+{
+  "pairs_file": "checkpoints/hintflow_hq_dataset/dpo_pairs_robust.jsonl",
+  "n_train": 729,
+  "n_val": 81,
+  "epochs": 3,
+  "batch_size": 1,
+  "grad_accum": 8,
+  "world_size": 1,
+  "effective_batch": 8,
+  "lr": 5e-06,
+  "beta": 0.1,
+  "history": [
+    {
+      "epoch": 1,
+      "loss": 0.6866801977157593,
+      "val_pair_acc": 0.48148148148148145
+    },
+    {
+      "epoch": 2,
+      "loss": 0.6545741558074951,
+      "val_pair_acc": 0.5061728395061729
+    },
+    {
+      "epoch": 3,
+      "loss": 0.5934472680091858,
+      "val_pair_acc": 0.5061728395061729
+    }
+  ],
+  "base_model": "checkpoints/hintflow_hq_sft_merged",
+  "ref_cache": "checkpoints/hintflow_hq_dpo_adapter/ref_cache.pt"
+}

@@ -507,6 +507,7 @@ def rollout_ff(
     *,
     small_output: str = "",
     max_tokens: int = 8192,
+    temperature: float = 0.0,
     protocol: str = "native",
 ) -> dict:
     hint = hint.strip()
@@ -515,7 +516,7 @@ def rollout_ff(
         large_output = call_llm(
             answer_client, answer_model, large_prompt,
             system=OSS_SYSTEM_PROMPT,
-            temperature=0.0, max_tokens=max_tokens,
+            temperature=temperature, max_tokens=max_tokens,
         )
         pred = extract_paper_answer(large_output)
         em = exact_match(pred, gold)
@@ -527,7 +528,7 @@ def rollout_ff(
         large_prompt = build_large_prompt(problem, hint)
         large_output = call_llm(
             answer_client, answer_model, large_prompt,
-            temperature=0.0, max_tokens=max_tokens,
+            temperature=temperature, max_tokens=max_tokens,
         )
         pred = extract_final_answer(large_output)
         reward, em, format_ok = compute_ff_reward(pred, gold, hint, large_output)

@@ -29,13 +29,15 @@ def load_idist_rows(labels_file: Path) -> list[dict]:
     return [by_id[i] for i in sorted(by_id)]
 
 
-def eval_oracle_hint(rows, answer_client, answer_model, *, protocol="native", workers=1):
+def eval_oracle_hint(
+    rows, answer_client, answer_model, *, protocol="native", workers=1, max_tokens=8192
+):
     from eval import _run_parallel
 
     def _one(row):
         r = rollout_ff(
             answer_client, answer_model, row["problem"], row["gold"], row["label_hint"],
-            protocol=protocol,
+            protocol=protocol, max_tokens=max_tokens,
         )
         r["id"] = row["id"]
         r["selected_action"] = "oracle_hint"
@@ -55,6 +57,7 @@ def run_idist_eval(
     limit: int | None = None,
     workers: int = EVAL_WORKERS,
     protocol: str = "native",
+    max_tokens: int = 8192,
 ) -> dict:
     modes = modes or ["live_baseline", "ff_router", "oracle_hint"]
     out_dir = Path(out_dir)
@@ -74,12 +77,14 @@ def run_idist_eval(
         "router_url": router_url or cfg.router_url,
         "protocol": protocol,
         "modes": modes,
+        "max_tokens": max_tokens,
     }
     results = {"meta": meta}
 
     if "live_baseline" in modes:
         recs = eval_live_baseline(
-            rows, answer_client, cfg.answer_model, protocol=protocol, workers=workers,
+            rows, answer_client, cfg.answer_model,
+            protocol=protocol, workers=workers, max_tokens=max_tokens,
         )
         results["live_baseline"] = _metrics(recs)
         write_jsonl(out_dir / "live_baseline.jsonl", recs)
@@ -88,14 +93,15 @@ def run_idist_eval(
         recs = eval_ff_router(
             rows, router_client, answer_client,
             router_model=router_model, answer_model=cfg.answer_model,
-            protocol=protocol, workers=workers,
+            protocol=protocol, workers=workers, max_tokens=max_tokens,
         )
         results["ff_router"] = _metrics(recs)
         write_jsonl(out_dir / "ff_router.jsonl", recs)
 
     if "oracle_hint" in modes:
         recs = eval_oracle_hint(
-            rows, answer_client, cfg.answer_model, protocol=protocol, workers=workers,
+            rows, answer_client, cfg.answer_model,
+            protocol=protocol, workers=workers, max_tokens=max_tokens,
         )
         results["oracle_hint"] = _metrics(recs)
         write_jsonl(out_dir / "oracle_hint.jsonl", recs)
@@ -122,6 +128,7 @@ def main() -> None:
     p.add_argument("--router-url", default="http://127.0.0.1:8086/v1")
     p.add_argument("--limit", type=int, default=None)
     p.add_argument("--workers", type=int, default=EVAL_WORKERS)
+    p.add_argument("--max-tokens", type=int, default=8192)
     p.add_argument("--protocol", choices=["native", "paper"], default="native")
     p.add_argument(
         "--modes", nargs="+",
@@ -139,6 +146,7 @@ def main() -> None:
         limit=args.limit,
         workers=args.workers,
         protocol=args.protocol,
+        max_tokens=args.max_tokens,
     )
 
 
