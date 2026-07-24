@@ -1,6 +1,6 @@
 {
-  "step": 3,
-  "cursor": 192,
+  "step": 18,
+  "cursor": 1152,
   "batch_size": 64,
   "k": 8,
   "gen_batch_size": 8,

@@ -1,0 +1,32 @@
+{
+  "repeats": 1,
+  "limit": 128,
+  "protocol": "native",
+  "router_mode": "ff_router",
+  "router_model": "qwen3-4b-blind-ff-17k",
+  "max_tokens": 8192,
+  "answer_urls": [
+    "http://127.0.0.1:8006/v1",
+    "http://127.0.0.1:8007/v1",
+    "http://127.0.0.1:8009/v1"
+  ],
+  "runs": [
+    {
+      "run": 1,
+      "live_baseline_em": 0.4921875,
+      "router_em": 0.5,
+      "delta_pp": 0.78125,
+      "n": 128,
+      "router_only_correct": 10,
+      "baseline_only_correct": 9,
+      "mcnemar_p": 1.0
+    }
+  ],
+  "live_baseline_em_mean": 0.4921875,
+  "live_baseline_em_std": 0.0,
+  "router_em_mean": 0.5,
+  "router_em_std": 0.0,
+  "delta_pp_mean": 0.78125,
+  "delta_pp_std": 0.0,
+  "delta_pp_all_positive": true
+}

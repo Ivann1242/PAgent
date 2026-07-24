@@ -20,7 +20,7 @@ for p in (_ROOT, _HERE):
         sys.path.insert(0, str(p))
 
 from config import EVAL_PARQUET  # noqa: E402
-from core import load_dapo_rows, load_jsonl, write_jsonl  # noqa: E402
+from core import append_jsonl, load_dapo_rows, load_jsonl, write_jsonl  # noqa: E402
 from one_agent import (  # noqa: E402
     ORCH_MODEL,
     ORCH_URL,
@@ -96,15 +96,31 @@ def _eval_row(
         }
 
 
-def _run_parallel(rows: list[dict], fn, *, workers: int, desc: str) -> list[dict]:
-    records: list[dict | None] = [None] * len(rows)
-    idx = {row["id"]: i for i, row in enumerate(rows)}
-    with ThreadPoolExecutor(max_workers=min(workers, len(rows))) as pool:
-        futs = {pool.submit(fn, row): row["id"] for row in rows}
-        for fut in tqdm(as_completed(futs), total=len(rows), desc=desc):
+def _run_parallel(
+    rows: list[dict], fn, *, workers: int, desc: str, resume_path: Path | None = None,
+) -> list[dict]:
+    done: dict = {}
+    if resume_path is not None and resume_path.exists():
+        for rec in load_jsonl(resume_path):
+            if rec.get("id") is not None and not rec.get("error"):
+                done[rec["id"]] = rec
+        if done:
+            print(f"[{desc}] resume {resume_path}: {len(done)}/{len(rows)} done", flush=True)
+
+    todo = [row for row in rows if row["id"] not in done]
+    if not todo:
+        return [done[row["id"]] for row in rows]
+
+    write_lock = threading.Lock()
+    with ThreadPoolExecutor(max_workers=min(workers, len(todo))) as pool:
+        futs = {pool.submit(fn, row): row["id"] for row in todo}
+        for fut in tqdm(as_completed(futs), total=len(todo), desc=desc):
             rec = fut.result()
-            records[idx[rec["id"]]] = rec
-    return records  # type: ignore[return-value]
+            done[rec["id"]] = rec
+            if resume_path is not None and not rec.get("error"):
+                with write_lock:
+                    append_jsonl(resume_path, rec)
+    return [done[row["id"]] for row in rows]
 
 
 def _mean(vals: list[float]) -> float:
@@ -114,7 +130,7 @@ def _mean(vals: list[float]) -> float:
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data-file", default=None)
-    p.add_argument("--limit", type=int, default=128)
+    p.add_argument("--limit", type=int, default=None, help="cap rows; default=all")
     p.add_argument("--workers", type=int, default=4)
     p.add_argument("--solver-urls", default=",".join(DEFAULT_SOLVER_URLS))
     p.add_argument("--orch-url", default=ORCH_URL)
@@ -138,14 +154,23 @@ def main() -> None:
     solver_urls = [u.strip() for u in args.solver_urls.split(",") if u.strip()]
     data_file = Path(args.data_file) if args.data_file else EVAL_PARQUET
     if data_file.suffix == ".parquet" or data_file == EVAL_PARQUET:
-        rows = load_dapo_rows(data_file)[: args.limit]
+        rows = load_dapo_rows(data_file)
     else:
-        rows = load_jsonl(data_file)[: args.limit]
+        # Dedup by id for label jsonl (keep first).
+        raw = load_jsonl(data_file)
+        by_id: dict = {}
+        for r in raw:
+            if r.get("id") not in by_id:
+                by_id[r["id"]] = r
+        rows = [by_id[i] for i in sorted(by_id)]
+    if args.limit is not None:
+        rows = rows[: args.limit]
     if not rows:
         raise SystemExit(f"no rows in {data_file}")
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    out_jsonl = out_dir / "hintflow_one.jsonl"
     print(
         f"HintFlow_one eval: n={len(rows)} workers={args.workers} "
         f"selector={args.selector_mode} tokens={args.solver_max_tokens} "
@@ -169,8 +194,9 @@ def main() -> None:
         ),
         workers=args.workers,
         desc="hintflow_one",
+        resume_path=out_jsonl,
     )
-    write_jsonl(out_dir / "hintflow_one.jsonl", records)
+    write_jsonl(out_jsonl, records)
 
     n = len(records)
     n_err = sum(1 for r in records if r.get("error"))

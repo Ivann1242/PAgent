@@ -9,8 +9,14 @@ from decimal import Decimal, InvalidOperation
 from fractions import Fraction
 from pathlib import Path
 
+import time
+
 import pandas as pd
-from openai import OpenAI
+from openai import APIConnectionError, APITimeoutError, OpenAI
+
+# Long 20k generations + queue wait can exceed the OpenAI default 600s read timeout.
+LLM_TIMEOUT_S = 3600.0
+LLM_MAX_RETRIES = 3
 
 ACTION_SPACE = {
     "baseline": "",
@@ -413,6 +419,10 @@ def append_jsonl(path: Path, row: dict) -> None:
         f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def make_openai_client(base_url: str, *, api_key: str = "EMPTY", timeout: float = LLM_TIMEOUT_S) -> OpenAI:
+    return OpenAI(base_url=base_url, api_key=api_key, timeout=timeout)
+
+
 def call_llm(
     client: OpenAI,
     model: str,
@@ -435,7 +445,24 @@ def call_llm(
     )
     if extra_body:
         kwargs["extra_body"] = extra_body
-    resp = client.chat.completions.create(**kwargs)
+    last_err: Exception | None = None
+    for attempt in range(1, LLM_MAX_RETRIES + 1):
+        try:
+            resp = client.chat.completions.create(**kwargs)
+            break
+        except (APITimeoutError, APIConnectionError) as e:
+            last_err = e
+            if attempt >= LLM_MAX_RETRIES:
+                raise
+            wait = min(30.0, 2.0 ** attempt)
+            print(
+                f"[call_llm] {type(e).__name__} attempt {attempt}/{LLM_MAX_RETRIES}; "
+                f"retry in {wait:.0f}s",
+                flush=True,
+            )
+            time.sleep(wait)
+    else:
+        raise last_err  # pragma: no cover
     msg = resp.choices[0].message
     content = (msg.content or "").strip()
     if content:

@@ -1,0 +1,40 @@
+% Oracle-hint replay: ~8k vs 20k on the 1809 iid label questions.
+% Requires: \usepackage{booktabs}, \usepackage{xcolor}
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\caption{Oracle-hint replay on the 1809 unique question ids in
+\texttt{oracle\_labels\_dedup.jsonl}
+(in-distribution coverage of Blind FF training labels).
+Each item uses the stored \texttt{label\_hint} with frozen GPT-OSS-20B
+(native protocol, $T{=}0$).
+\textbf{$\sim$8k} is the earlier idist oracle evaluation;
+\textbf{20k} reruns the same hints with \texttt{max\_tokens}${}=20000$.}
+\label{tab:oracle-hint-8k-vs-20k}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Solver budget}
+  & \textbf{$n$}
+  & \textbf{Oracle EM}
+  & \textbf{$\Delta$ vs $\sim$8k} \\
+\midrule
+$\sim$8k
+  & 1809
+  & 61.58\%
+  & --- \\
+20k
+  & 1809
+  & \textbf{77.17\%}
+  & \textcolor{green!60!black}{\textbf{$+15.59$\,pp}} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25em}
+{\scriptsize
+Raising the solver generation budget lifts the oracle-hint upper bound by
+$15.6$\,pp on the same 1809 hints, indicating a large truncation tax under
+the shorter setting.
+Of the 1809 labels, $1396$ remain correct under 20k and $413$ still fail.
+}
+\end{table}

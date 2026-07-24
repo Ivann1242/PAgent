@@ -155,7 +155,7 @@ class HintFlowOneAgent:
         solver_temperature: float = 0.0,
         replace_threshold: float = 0.90,
         selector_mode: str = "orch",
-        request_timeout: float = 600.0,
+        request_timeout: float = 3600.0,
         solver_seed: int | None = None,
     ) -> None:
         if selector_mode not in {"orch", "keep", "replace"}:

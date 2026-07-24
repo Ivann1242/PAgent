@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "labels_file": "checkpoints/blind_hint_17k/oracle_labels_dedup.jsonl",
+    "n_questions": 1809,
+    "router_model": "qwen3-4b-blind-ff-17k",
+    "router_url": "http://127.0.0.1:8086/v1",
+    "answer_urls": [
+      "http://127.0.0.1:8006/v1",
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1",
+      "http://127.0.0.1:8009/v1"
+    ],
+    "protocol": "native",
+    "modes": [
+      "live_baseline",
+      "ff_router"
+    ],
+    "max_tokens": 20000,
+    "answer_urls_baseline": [
+      "http://127.0.0.1:8006/v1",
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1",
+      "http://127.0.0.1:8009/v1"
+    ],
+    "answer_urls_router": [
+      "http://127.0.0.1:8006/v1",
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1"
+    ]
+  },
+  "live_baseline": {
+    "em": 0.6959646213377557,
+    "format_accuracy": 0.6926478717523493,
+    "avg_reward": 0.6959646213377557,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 1809
+    },
+    "per_action_em": {
+      "baseline": 0.6959646213377557
+    },
+    "n": 1809
+  },
+  "ff_router": {
+    "em": 0.6937534549474847,
+    "format_accuracy": 0.6312880044223328,
+    "avg_reward": 0.6832504145936982,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "freeform": 1809
+    },
+    "per_action_em": {},
+    "n": 1809
+  },
+  "ff_router_vs_live_baseline": -0.002211166390270969,
+  "oracle_hint_20k_ref": {
+    "em": 0.7716970702045329,
+    "format_accuracy": 0.7119955776672194,
+    "avg_reward": 0.7705914870093975,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "oracle_hint": 1809
+    },
+    "per_action_em": {},
+    "n": 1809
+  },
+  "ff_router_vs_oracle_hint_20k": -0.07794361525704818
+}

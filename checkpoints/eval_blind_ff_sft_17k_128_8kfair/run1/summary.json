@@ -1,0 +1,38 @@
+{
+  "protocol": "native",
+  "answer_urls": [
+    "http://127.0.0.1:8006/v1",
+    "http://127.0.0.1:8007/v1",
+    "http://127.0.0.1:8009/v1"
+  ],
+  "max_tokens": {
+    "live_baseline": 8192,
+    "ff_router": 8192,
+    "router": 8192
+  },
+  "live_baseline": {
+    "em": 0.4921875,
+    "format_accuracy": 0.8203125,
+    "avg_reward": 0.4921875,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 128
+    },
+    "per_action_em": {
+      "baseline": 0.4921875
+    },
+    "n": 128
+  },
+  "ff_router": {
+    "em": 0.5,
+    "format_accuracy": 0.71875,
+    "avg_reward": 0.484375,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "freeform": 128
+    },
+    "per_action_em": {},
+    "n": 128
+  },
+  "ff_router_vs_live_baseline": 0.0078125
+}

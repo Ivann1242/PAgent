@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "data_file": "checkpoints/blind_hint_17k/oracle_labels_dedup.jsonl",
+    "n": 1809,
+    "workers": 48,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1",
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b-blind-ff-17k",
+    "solver_model": "gpt-oss-20b",
+    "solver_max_tokens": 20000,
+    "selector_mode": "orch",
+    "replace_threshold": 0.9,
+    "seed": 41,
+    "elapsed_sec": 4953.7
+  },
+  "hintflow_one": {
+    "em": 0.7982310668877833,
+    "baseline_em": 0.6965174129353234,
+    "challenger_em": 0.7103372028745163,
+    "paired_delta": 0.1017136539524599,
+    "recovered": 197,
+    "harmed": 13,
+    "baseline_correct_retention": 0.9896825396825397,
+    "replace_count": 252,
+    "n_error": 0,
+    "sample_error": null
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "labels_file": "checkpoints/blind_hint_merged_17k_plus_hardremine_8k/oracle_labels.jsonl",
+  "n_train": 4129,
+  "n_val": 458,
+  "epochs": 3,
+  "batch_size": 4,
+  "lr": 2e-05,
+  "mode": "freeform_sft"
+}

@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "data_file": "data/math500.jsonl",
+    "n": 500,
+    "workers": 32,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1",
+      "http://127.0.0.1:8007/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b-blind-ff-17k",
+    "solver_model": "gpt-oss-20b",
+    "solver_max_tokens": 20000,
+    "selector_mode": "orch",
+    "replace_threshold": 0.9,
+    "seed": 41,
+    "elapsed_sec": 877.4
+  },
+  "hintflow_one": {
+    "em": 0.798,
+    "baseline_em": 0.786,
+    "challenger_em": 0.744,
+    "paired_delta": 0.01200000000000001,
+    "recovered": 7,
+    "harmed": 1,
+    "baseline_correct_retention": 0.9974554707379135,
+    "replace_count": 11,
+    "n_error": 0,
+    "sample_error": null
+  }
+}

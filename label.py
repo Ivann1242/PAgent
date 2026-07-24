@@ -34,7 +34,9 @@ class _AnswererPool:
     """Round-robin OpenAI clients across multiple vLLM answerer endpoints."""
 
     def __init__(self, urls: list[str], model: str):
-        self._clients = cycle([OpenAI(base_url=u, api_key="EMPTY") for u in urls])
+        from core import make_openai_client
+
+        self._clients = cycle([make_openai_client(u) for u in urls])
         self._lock = threading.Lock()
         self.model = model
         self.urls = urls

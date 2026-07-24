@@ -61,11 +61,26 @@ def main() -> None:
     p.add_argument("--router-model", default="qwen3-4b-router")
     p.add_argument("--out-root", default="checkpoints/eval_native_128_repeat")
     p.add_argument("--eval-workers", type=int, default=EVAL_WORKERS)
+    p.add_argument(
+        "--answer-urls",
+        default=None,
+        help="comma-separated OSS URLs for parallel reward/eval (default: config ANSWER_URLS)",
+    )
+    p.add_argument(
+        "--max-tokens",
+        type=int,
+        default=None,
+        help="solver max_tokens for BOTH live_baseline and router (default: legacy 4k/8k split)",
+    )
     args = p.parse_args()
 
     router_mode = ROUTER_MODES[args.router_mode]
     cfg = Config()
     cfg.router_url = args.router_url
+    answer_urls = (
+        [u.strip() for u in args.answer_urls.split(",") if u.strip()]
+        if args.answer_urls else list(cfg.answer_urls)
+    )
     root = Path(args.out_root)
     root.mkdir(parents=True, exist_ok=True)
 
@@ -81,6 +96,8 @@ def main() -> None:
             router_model=args.router_model,
             protocol=args.protocol,
             workers=args.eval_workers,
+            answer_urls=answer_urls,
+            max_tokens=args.max_tokens,
         )
         router_jsonl = out_dir / f"{router_mode}.jsonl"
         paired = _paired_stats(out_dir / "live_baseline.jsonl", router_jsonl)
@@ -104,6 +121,8 @@ def main() -> None:
         "protocol": args.protocol,
         "router_mode": router_mode,
         "router_model": args.router_model,
+        "max_tokens": args.max_tokens,
+        "answer_urls": answer_urls,
         "runs": runs,
         "live_baseline_em_mean": sum(base_ems) / len(base_ems),
         "live_baseline_em_std": statistics.pstdev(base_ems) if len(base_ems) > 1 else 0.0,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -85,18 +86,42 @@ def eval_random(rows, answer_client, answer_model, *, max_tokens=4096, protocol=
 ROUTER_EXTRA_BODY = {"chat_template_kwargs": {"enable_thinking": False}}
 
 
-def _run_parallel(rows, fn, *, workers: int, desc: str) -> list[dict]:
-    if workers <= 1 or len(rows) <= 1:
-        return [fn(row) for row in tqdm(rows, desc=desc)]
+def _run_parallel(
+    rows, fn, *, workers: int, desc: str, resume_path: Path | str | None = None,
+) -> list[dict]:
+    """Run fn over rows; optionally resume/append to resume_path jsonl by id."""
+    from core import append_jsonl, load_jsonl
 
-    records: list[dict | None] = [None] * len(rows)
-    idx = {row["id"]: i for i, row in enumerate(rows)}
-    with ThreadPoolExecutor(max_workers=min(workers, len(rows))) as pool:
-        futures = {pool.submit(fn, row): row["id"] for row in rows}
-        for fut in tqdm(as_completed(futures), total=len(rows), desc=desc):
-            rec = fut.result()
-            records[idx[rec["id"]]] = rec
-    return records  # type: ignore[return-value]
+    resume_path = Path(resume_path) if resume_path is not None else None
+    done: dict = {}
+    if resume_path is not None and resume_path.exists():
+        for rec in load_jsonl(resume_path):
+            done[rec["id"]] = rec
+        if done:
+            print(f"[{desc}] resume {resume_path}: {len(done)}/{len(rows)} done", flush=True)
+
+    todo = [row for row in rows if row["id"] not in done]
+    if not todo:
+        return [done[row["id"]] for row in rows]
+
+    write_lock = threading.Lock()
+
+    def _store(rec: dict) -> None:
+        done[rec["id"]] = rec
+        if resume_path is not None:
+            with write_lock:
+                append_jsonl(resume_path, rec)
+
+    if workers <= 1 or len(todo) <= 1:
+        for row in tqdm(todo, desc=desc):
+            _store(fn(row))
+        return [done[row["id"]] for row in rows]
+
+    with ThreadPoolExecutor(max_workers=min(workers, len(todo))) as pool:
+        futures = {pool.submit(fn, row): row["id"] for row in todo}
+        for fut in tqdm(as_completed(futures), total=len(todo), desc=desc):
+            _store(fut.result())
+    return [done[row["id"]] for row in rows]
 
 
 def _eval_live_baseline_row(row, answer_client, answer_model, *, protocol, max_tokens):
@@ -129,11 +154,16 @@ def _eval_router_row(row, router_client, answer_client, *, router_model, answer_
 
 
 def eval_live_baseline(rows, answer_client, answer_model, *, max_tokens=4096,
-                       protocol="native", workers=1) -> list[dict]:
-    fn = lambda row: _eval_live_baseline_row(
-        row, answer_client, answer_model, protocol=protocol, max_tokens=max_tokens,
+                       protocol="native", workers=1, answer_pool=None,
+                       resume_path=None) -> list[dict]:
+    def fn(row):
+        client = answer_pool.next_client() if answer_pool is not None else answer_client
+        return _eval_live_baseline_row(
+            row, client, answer_model, protocol=protocol, max_tokens=max_tokens,
+        )
+    return _run_parallel(
+        rows, fn, workers=workers, desc="live_baseline", resume_path=resume_path,
     )
-    return _run_parallel(rows, fn, workers=workers, desc="live_baseline")
 
 
 def _eval_ff_router_row(row, router_client, answer_client, *, router_model, answer_model,
@@ -155,13 +185,18 @@ def _eval_ff_router_row(row, router_client, answer_client, *, router_model, answ
 
 
 def eval_ff_router(rows, router_client, answer_client, *, router_model, answer_model,
-                   temperature=0.0, max_tokens=8192, protocol="native", workers=1) -> list[dict]:
-    fn = lambda row: _eval_ff_router_row(
-        row, router_client, answer_client,
-        router_model=router_model, answer_model=answer_model,
-        protocol=protocol, max_tokens=max_tokens, temperature=temperature,
+                   temperature=0.0, max_tokens=8192, protocol="native", workers=1,
+                   answer_pool=None, resume_path=None) -> list[dict]:
+    def fn(row):
+        client = answer_pool.next_client() if answer_pool is not None else answer_client
+        return _eval_ff_router_row(
+            row, router_client, client,
+            router_model=router_model, answer_model=answer_model,
+            protocol=protocol, max_tokens=max_tokens, temperature=temperature,
+        )
+    return _run_parallel(
+        rows, fn, workers=workers, desc="ff_router", resume_path=resume_path,
     )
-    return _run_parallel(rows, fn, workers=workers, desc="ff_router")
 
 
 def eval_router(rows, router_client, answer_client, *, router_model, answer_model,
@@ -245,7 +280,9 @@ def run_precheck(cfg: Config, *, limit=16, out_dir=None) -> dict:
 
 
 def run_eval(cfg: Config, *, modes=None, limit=None, out_dir=None,
-             router_model=None, protocol="native", workers=EVAL_WORKERS) -> dict:
+             router_model=None, protocol="native", workers=EVAL_WORKERS,
+             answer_urls: list[str] | None = None,
+             max_tokens: int | None = None) -> dict:
     modes = modes or ["baseline", "random", "router", "oracle"]
     if out_dir is None:
         out_dir = cfg.ckpt_dir / ("eval_paper" if protocol == "paper" else "eval")
@@ -256,11 +293,29 @@ def run_eval(cfg: Config, *, modes=None, limit=None, out_dir=None,
     if limit:
         rows = rows[:limit]
     baseline = load_baseline_predictions(BASELINE_RES)
-    answer_client = OpenAI(base_url=cfg.answer_url, api_key="EMPTY")
+    urls = list(answer_urls or cfg.answer_urls or [cfg.answer_url])
+    answer_client = OpenAI(base_url=urls[0], api_key="EMPTY")
+    answer_pool = None
+    if len(urls) > 1:
+        from label import _AnswererPool
+        answer_pool = _AnswererPool(urls, cfg.answer_model)
+        print(f"eval answer pool: {len(urls)} urls, workers={workers}", flush=True)
     router_client = OpenAI(base_url=cfg.router_url, api_key="EMPTY")
     router_model = router_model or cfg.router_model
 
-    results = {"protocol": protocol}
+    # Defaults historically differed (baseline 4k vs ff 8k); pass max_tokens to align.
+    baseline_tokens = 4096 if max_tokens is None else max_tokens
+    ff_tokens = 8192 if max_tokens is None else max_tokens
+    router_tokens = 4096 if max_tokens is None else max_tokens
+    results = {
+        "protocol": protocol,
+        "answer_urls": urls,
+        "max_tokens": {
+            "live_baseline": baseline_tokens,
+            "ff_router": ff_tokens,
+            "router": router_tokens,
+        },
+    }
     if "baseline" in modes:
         recs = eval_baseline(rows, baseline)
         results["baseline"] = _metrics(recs)
@@ -269,12 +324,16 @@ def run_eval(cfg: Config, *, modes=None, limit=None, out_dir=None,
         )
 
     if "random" in modes:
-        recs = eval_random(rows, answer_client, cfg.answer_model, protocol=protocol)
+        recs = eval_random(
+            rows, answer_client, cfg.answer_model, protocol=protocol,
+            max_tokens=baseline_tokens,
+        )
         results["random"] = _metrics(recs)
 
     if "live_baseline" in modes:
         recs = eval_live_baseline(
             rows, answer_client, cfg.answer_model, protocol=protocol, workers=workers,
+            answer_pool=answer_pool, max_tokens=baseline_tokens,
         )
         results["live_baseline"] = _metrics(recs)
         (out_dir / "live_baseline.jsonl").write_text(
@@ -285,7 +344,7 @@ def run_eval(cfg: Config, *, modes=None, limit=None, out_dir=None,
         recs = eval_router(
             rows, router_client, answer_client,
             router_model=router_model, answer_model=cfg.answer_model,
-            protocol=protocol, workers=workers,
+            protocol=protocol, workers=workers, max_tokens=router_tokens,
         )
         results["router"] = _metrics(recs)
         (out_dir / "router.jsonl").write_text(
@@ -296,7 +355,8 @@ def run_eval(cfg: Config, *, modes=None, limit=None, out_dir=None,
         recs = eval_ff_router(
             rows, router_client, answer_client,
             router_model=router_model or cfg.router_model, answer_model=cfg.answer_model,
-            protocol=protocol, workers=workers,
+            protocol=protocol, workers=workers, answer_pool=answer_pool,
+            max_tokens=ff_tokens,
         )
         results["ff_router"] = _metrics(recs)
         (out_dir / "ff_router.jsonl").write_text(

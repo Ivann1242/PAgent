@@ -1,0 +1,32 @@
+{
+  "repeats": 1,
+  "limit": 128,
+  "protocol": "native",
+  "router_mode": "ff_router",
+  "router_model": "qwen3-4b-blind-ff-grpo-r3-step17",
+  "max_tokens": 8192,
+  "answer_urls": [
+    "http://127.0.0.1:8006/v1",
+    "http://127.0.0.1:8007/v1",
+    "http://127.0.0.1:8009/v1"
+  ],
+  "runs": [
+    {
+      "run": 1,
+      "live_baseline_em": 0.5078125,
+      "router_em": 0.4765625,
+      "delta_pp": -3.125,
+      "n": 128,
+      "router_only_correct": 8,
+      "baseline_only_correct": 12,
+      "mcnemar_p": 0.5034446716308594
+    }
+  ],
+  "live_baseline_em_mean": 0.5078125,
+  "live_baseline_em_std": 0.0,
+  "router_em_mean": 0.4765625,
+  "router_em_std": 0.0,
+  "delta_pp_mean": -3.125,
+  "delta_pp_std": 0.0,
+  "delta_pp_all_positive": false
+}

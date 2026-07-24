@@ -1,9 +1,9 @@
 ---
-base_model: /home/ivaning/prompt-r1r/Prompt-R1/Qwen/Qwen3-4B
+base_model: Qwen/Qwen3-4B
 library_name: peft
 pipeline_tag: text-generation
 tags:
-- base_model:adapter:/home/ivaning/prompt-r1r/Prompt-R1/Qwen/Qwen3-4B
+- base_model:adapter:Qwen/Qwen3-4B
 - lora
 - transformers
 ---

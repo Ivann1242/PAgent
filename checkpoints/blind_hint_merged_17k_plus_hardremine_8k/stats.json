@@ -1,0 +1,28 @@
+{
+  "sources": {
+    "blind_hint_17k/oracle_labels.jsonl": {
+      "n_labels": 3687,
+      "n_ids": 1809
+    },
+    "blind_hint_hard_remine_8k_k12/oracle_labels.jsonl": {
+      "n_labels": 900,
+      "n_ids": 560
+    }
+  },
+  "merged": {
+    "n_labels": 4587,
+    "n_ids": 2369,
+    "path": "checkpoints/blind_hint_merged_17k_plus_hardremine_8k/oracle_labels.jsonl"
+  },
+  "merged_dedup": {
+    "n_labels": 2369,
+    "n_ids": 2369,
+    "path": "checkpoints/blind_hint_merged_17k_plus_hardremine_8k/oracle_labels_dedup.jsonl",
+    "note": "one label per id: original dedup preferred + first remine label for new ids"
+  },
+  "id_overlap_sources": 0,
+  "remine_budget": {
+    "max_tokens": 8192,
+    "k": 12
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "repeats": 1,
+  "limit": 128,
+  "protocol": "native",
+  "router_mode": "ff_router",
+  "router_model": "qwen3-4b-blind-ff-20k-ok",
+  "runs": [
+    {
+      "run": 1,
+      "live_baseline_em": 0.4375,
+      "router_em": 0.5,
+      "delta_pp": 6.25,
+      "n": 128,
+      "router_only_correct": 15,
+      "baseline_only_correct": 7,
+      "mcnemar_p": 0.13380050659179688
+    }
+  ],
+  "live_baseline_em_mean": 0.4375,
+  "live_baseline_em_std": 0.0,
+  "router_em_mean": 0.5,
+  "router_em_std": 0.0,
+  "delta_pp_mean": 6.25,
+  "delta_pp_std": 0.0,
+  "delta_pp_all_positive": true
+}

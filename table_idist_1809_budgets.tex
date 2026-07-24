@@ -1,0 +1,62 @@
+% IID 1809: matched-budget comparison across solver budgets.
+% Requires: \usepackage{booktabs}, \usepackage{xcolor}
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{In-distribution evaluation on the 1809 unique question ids covered by
+Blind FF training labels (\texttt{oracle\_labels\_dedup.jsonl}).
+Frozen GPT-OSS-20B answerer, native protocol, $T{=}0$.
+\textbf{Baseline}: no hint.
+\textbf{Challenger} / \textbf{Router}: always-on Blind FF-SFT 17k free-form hint
+(challenger is the HintFlow\_one first-pass rollout; router is the historical
+always-on idist eval at the same budget).
+\textbf{HF1}: HintFlow\_one KEEP/REPLACE over baseline vs.\ challenger.
+\textbf{Oracle}: replay of the stored training \texttt{label\_hint}.
+Within each row, baseline / challenger / HF1 share the listed
+\texttt{max\_tokens}; router and oracle use the same budget in separate
+always-on / replay runs.
+$\Delta$ is HF1 EM minus baseline EM.}
+\label{tab:idist-1809-budgets}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Budget}
+  & \textbf{Baseline}
+  & \textbf{Challenger}
+  & \textbf{Router}
+  & \textbf{HF1}
+  & \textbf{Oracle}
+  & \textbf{$\Delta$ (HF1)} \\
+\midrule
+4k
+  & 30.24\%
+  & 34.77\%
+  & 34.77\%$^{\dagger}$
+  & \textbf{43.34\%}
+  & ---
+  & \textcolor{green!60!black}{\textbf{$+13.10$\,pp}} \\
+8k
+  & 52.90\%
+  & 55.56\%
+  & 55.94\%
+  & \textbf{67.39\%}
+  & 61.58\%
+  & \textcolor{green!60!black}{\textbf{$+14.48$\,pp}} \\
+20k
+  & 69.65\%
+  & 71.03\%
+  & 69.38\%
+  & \textbf{79.82\%}
+  & 77.17\%
+  & \textcolor{green!60!black}{\textbf{$+10.17$\,pp}} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25em}
+{\scriptsize
+$^{\dagger}$At 4k, always-on router EM equals the HF1 challenger (same path).
+HF1 recover/harm counts: 4k $241/4$, 8k $267/5$, 20k $197/13$.
+Across budgets, always-on router is near baseline, while HF1 exceeds both
+always-on router and oracle by harvesting recoveries and suppressing harm.
+}
+\end{table}

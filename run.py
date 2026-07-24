@@ -114,6 +114,11 @@ def main() -> None:
     sp.add_argument("--workers", type=int, default=32)
     sp.add_argument("--k", type=int, default=6, help="hint samples per baseline-wrong question")
     sp.add_argument("--hint-temp", type=float, default=0.8)
+    sp.add_argument("--max-tokens", type=int, default=8192, help="solver max_tokens for baseline+hint test")
+    sp.add_argument(
+        "--only-ids-file", default=None,
+        help="jsonl/ids file: only label these question ids",
+    )
     sp.add_argument("--answer-urls", default=None)
     sp.add_argument("--protocol", choices=["native", "paper"], default="native")
 
@@ -268,6 +273,8 @@ def main() -> None:
             protocol=args.protocol,
             k=args.k,
             hint_temp=args.hint_temp,
+            max_tokens=args.max_tokens,
+            only_ids_file=Path(args.only_ids_file) if args.only_ids_file else None,
         )
     elif args.cmd == "dpo-build":
         from dpo_data import build_dpo_pairs

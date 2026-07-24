@@ -1,0 +1,33 @@
+% Fair 8k comparison: Blind FF-SFT 17k vs GRPO@step17 on DAPO-128.
+% Requires: \usepackage{booktabs}, \usepackage{xcolor}
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\caption{Fair native-protocol comparison of Blind FF routers on 128 DAPO-Math
+test samples ($T{=}0$, one seed, \texttt{max\_tokens}${}=8192$).
+\textbf{SFT 17k} is \texttt{blind\_ff\_sft\_17k\_merged};
+\textbf{GRPO@step17} continues from that SFT adapter for 17 GRPO steps
+(batch$\,{=}\,64$, $K{=}8$, reward${=}\mathrm{mean}(\mathrm{EM}{\times}3)$ at temp$\,{=}0$).
+$\Delta$ is GRPO router EM minus SFT router EM.}
+\label{tab:sft17k-vs-grpo-step17-8kfair}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Model} & \textbf{Router EM} & \textbf{$\Delta$ vs SFT} \\
+\midrule
+SFT 17k
+  & \textbf{50.00\%}
+  & --- \\
+GRPO@step17
+  & 47.66\%
+  & \textcolor{red!70!black}{$-2.34$\,pp} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25em}
+{\scriptsize
+Paired discordant items: SFT uniquely correct on $8$ questions, GRPO on $5$
+(net $-3$ for GRPO).
+Under a matched 8k budget, GRPO does not improve over its SFT initialization.
+}
+\end{table}
