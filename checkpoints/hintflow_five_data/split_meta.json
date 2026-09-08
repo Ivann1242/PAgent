@@ -1,0 +1,8 @@
+{
+  "source": "data/train.jsonl",
+  "seed": 20260817,
+  "n_source": 10816,
+  "n_train_questions": 2048,
+  "n_iid_questions": 512,
+  "overlap": 0
+}

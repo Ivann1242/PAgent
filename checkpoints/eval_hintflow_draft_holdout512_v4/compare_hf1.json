@@ -1,0 +1,17 @@
+{
+  "n_paired": 506,
+  "hf1_ref": "checkpoints/compare_holdout512_hf1_qwen14b_8k",
+  "hf1_em": 0.5612648221343873,
+  "hf1_baseline_em": 0.5375494071146245,
+  "hf1_recovered": 50,
+  "hf1_harmed": 38,
+  "draft_em": 0.575098814229249,
+  "draft_bare_em": 0.525691699604743,
+  "draft_recovered": 48,
+  "draft_harmed": 23,
+  "draft_beats_hf1": 51,
+  "hf1_beats_draft": 44,
+  "delta_vs_hf1": 0.013833992094861691,
+  "draft_delta_vs_bare": 0.04940711462450598,
+  "hf1_delta_vs_bare": 0.02371541501976282
+}

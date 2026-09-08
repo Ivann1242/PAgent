@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "labels_file": "checkpoints/blind_hint_17k_qwen3_14b_nothink/oracle_labels_clean_train_sample128_fixedcot.jsonl",
+    "n_questions": 128,
+    "router_model": "unused",
+    "router_url": "http://127.0.0.1:8086/v1",
+    "answer_urls": [
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1"
+    ],
+    "protocol": "native",
+    "modes": [
+      "oracle_hint"
+    ],
+    "max_tokens": 8192
+  },
+  "oracle_hint": {
+    "em": 0.4375,
+    "format_accuracy": 0.71875,
+    "avg_reward": 0.4375,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "oracle_hint": 128
+    },
+    "per_action_em": {},
+    "n": 128
+  }
+}

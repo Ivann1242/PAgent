@@ -1,0 +1,14 @@
+{
+  "n_paired": 63,
+  "v3_em": 0.5714285714285714,
+  "v4_em": 0.6031746031746031,
+  "v4_draft_em": 0.5079365079365079,
+  "v3_recovered": 5,
+  "v3_harmed": 1,
+  "v4_recovered": 7,
+  "v4_harmed": 1,
+  "v4_draft_votes": 4,
+  "v4_plan_sanitized": 2,
+  "keep": true,
+  "delta_vs_v3": 0.031746031746031744
+}

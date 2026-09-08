@@ -1,0 +1,16 @@
+{
+  "cmd": "train",
+  "data": "checkpoints/hintflow_five_data/sft_turns.jsonl",
+  "base": "/home/ivaning/prompt-r1r/Prompt-R1/Qwen/Qwen3-4B",
+  "out": "checkpoints/hintflow_five_router_adapter",
+  "epochs": 3,
+  "batch_size": 8,
+  "lr": 2e-05,
+  "val_ratio": 0.1,
+  "seed": 42,
+  "n_train_questions": 1843,
+  "n_val_questions": 205,
+  "n_train_turns": 9215,
+  "n_val_turns": 1025,
+  "world_size": 1
+}

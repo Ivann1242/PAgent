@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "data_file": "checkpoints/blind_hint_17k/oracle_labels_dedup.jsonl",
+    "n": 1809,
+    "workers": 80,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1",
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1",
+      "http://127.0.0.1:8009/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b-blind-ff-17k",
+    "solver_model": "gpt-oss-20b",
+    "solver_max_tokens": 8192,
+    "use_threshold": 0.9,
+    "mode": "gated",
+    "seed": 41,
+    "elapsed_sec": 2900.5
+  },
+  "gated": {
+    "em": 0.5422885572139303,
+    "used_hint_rate": 0.34328358208955223,
+    "used_hint_count": 621,
+    "n_error": 0,
+    "sample_error": null
+  },
+  "paired_vs_bare": {
+    "n": 989,
+    "bare_em": 0.5045500505561172,
+    "gated_em": 0.537917087967644,
+    "paired_delta": 0.0333670374115268,
+    "recovered": 181,
+    "harmed": 148,
+    "pair_file": "checkpoints/eval_hintflow_gate_idist_1809_8k/bare.jsonl"
+  }
+}

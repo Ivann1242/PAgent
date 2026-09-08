@@ -1,0 +1,13 @@
+{
+  "step": 200,
+  "cursor": 3138,
+  "batch_size": 32,
+  "k": 8,
+  "gen_batch_size": 8,
+  "reward_repeats": 1,
+  "reward_max_tokens": 8192,
+  "reward_temperature": 0.0,
+  "advantage_method": "virtual_positive_grpo",
+  "reference_adapter": "checkpoints/blind_ff_sft_qwen3_14b_nothink_clean_adapter",
+  "kl_beta": 0.02
+}

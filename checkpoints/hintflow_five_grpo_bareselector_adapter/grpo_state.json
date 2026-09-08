@@ -1,0 +1,11 @@
+{
+  "update": 92,
+  "cursor": 92,
+  "base": "/home/ivaning/prompt-r1r/Prompt-R1/Qwen/Qwen3-4B",
+  "turns": 5,
+  "k": 4,
+  "batch_size": 1,
+  "rank_weight": 1.0,
+  "signal_groups": 1,
+  "groups": 5
+}

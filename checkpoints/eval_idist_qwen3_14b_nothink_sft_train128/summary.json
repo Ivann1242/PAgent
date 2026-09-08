@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "labels_file": "checkpoints/blind_hint_17k_qwen3_14b_nothink/oracle_labels_train_sample128.jsonl",
+    "n_questions": 128,
+    "router_model": "qwen3-4b-blind-ff-qwen3-14b-nothink",
+    "router_url": "http://127.0.0.1:8086/v1",
+    "answer_urls": [
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1"
+    ],
+    "protocol": "native",
+    "modes": [
+      "live_baseline"
+    ],
+    "max_tokens": 8192
+  },
+  "live_baseline": {
+    "em": 0.3203125,
+    "format_accuracy": 0.734375,
+    "avg_reward": 0.3203125,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 128
+    },
+    "per_action_em": {
+      "baseline": 0.3203125
+    },
+    "n": 128
+  }
+}

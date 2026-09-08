@@ -1,0 +1,17 @@
+{
+  "source_labels": "checkpoints/blind_hint_17k_qwen3_14b_nothink/oracle_labels.jsonl",
+  "n_source_rows": 13145,
+  "n_source_unique": 5020,
+  "n_clean_rows": 7701,
+  "n_clean_unique": 3262,
+  "n_true_hard_qs": 3288,
+  "n_contam_qs": 1732,
+  "filter": "reparsed baseline em==0 AND reparsed hint_test em==1",
+  "drops": {
+    "label_rows": 13145,
+    "drop_baseline_actually_ok": 5357,
+    "drop_hint_not_correct_reparse": 87
+  },
+  "kept": 7701,
+  "parse_fix": "core.extract_final_answer allows ### Final Answer"
+}

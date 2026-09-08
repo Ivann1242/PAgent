@@ -1,0 +1,14 @@
+{
+  "mode": "baseline",
+  "n": 512,
+  "requested_n": 512,
+  "em": 0.41015625,
+  "decisions": {
+    "BASELINE": 2560
+  },
+  "selector_parse_failures": 0,
+  "errors_or_missing": 0,
+  "elapsed_sec": 905.2,
+  "router_model": null,
+  "solver_model": "qwen3-14b"
+}

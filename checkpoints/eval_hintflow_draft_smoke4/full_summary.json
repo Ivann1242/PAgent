@@ -1,0 +1,108 @@
+{
+  "meta": {
+    "mode": "full",
+    "data_file": "data/dapo_holdout_512.jsonl",
+    "n": 4,
+    "n_success": 3,
+    "requested_n": 4,
+    "workers": 4,
+    "solver_urls": [
+      "http://127.0.0.1:8008/v1"
+    ],
+    "small_url": "http://127.0.0.1:8086/v1",
+    "small_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "planner_url": "http://127.0.0.1:8086/v1",
+    "planner_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "hinter_url": "http://127.0.0.1:8086/v1",
+    "hinter_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "selector_url": "http://127.0.0.1:8086/v1",
+    "selector_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "solver_model": "qwen3-14b",
+    "max_steps": 8,
+    "draft_max_tokens": 8192,
+    "step_max_tokens": 2048,
+    "planner_max_tokens": 1024,
+    "hint_max_tokens": 256,
+    "selector_max_tokens": 192,
+    "temperature": 0.0,
+    "seed": 20260905,
+    "elapsed_sec": 460.6
+  },
+  "full": {
+    "em": 0.5,
+    "draft_em": 0.5,
+    "delta_vs_draft": 0.0,
+    "recovered_vs_draft": 0,
+    "harmed_vs_draft": 0,
+    "final_parseable_rate": 1.0,
+    "plan_parse_failures": 0,
+    "plan_fallbacks": 0,
+    "step_count_distribution": {
+      "2": 1,
+      "5": 1,
+      "8": 1
+    },
+    "mean_steps": 5.0,
+    "decisions": {
+      "HINTED": 5,
+      "BASELINE": 10
+    },
+    "hinted_rate": 0.3333333333333333,
+    "decisions_by_step": {
+      "1": {
+        "n": 3,
+        "baseline": 2,
+        "hinted": 1,
+        "hinted_rate": 0.3333333333333333
+      },
+      "2": {
+        "n": 3,
+        "baseline": 3,
+        "hinted": 0,
+        "hinted_rate": 0.0
+      },
+      "3": {
+        "n": 2,
+        "baseline": 1,
+        "hinted": 1,
+        "hinted_rate": 0.5
+      },
+      "4": {
+        "n": 2,
+        "baseline": 1,
+        "hinted": 1,
+        "hinted_rate": 0.5
+      },
+      "5": {
+        "n": 2,
+        "baseline": 1,
+        "hinted": 1,
+        "hinted_rate": 0.5
+      },
+      "6": {
+        "n": 1,
+        "baseline": 1,
+        "hinted": 0,
+        "hinted_rate": 0.0
+      },
+      "7": {
+        "n": 1,
+        "baseline": 1,
+        "hinted": 0,
+        "hinted_rate": 0.0
+      },
+      "8": {
+        "n": 1,
+        "baseline": 0,
+        "hinted": 1,
+        "hinted_rate": 1.0
+      }
+    },
+    "selector_parse_failures": 8,
+    "premature_selected_answers": 12,
+    "mean_large_calls": 11.0,
+    "mean_small_calls": 11.0,
+    "n_error": 1,
+    "sample_error": "BadRequestError: Error code: 400 - {'error': {'message': \"This model's maximum context length is 8192 tokens. However, you requested 1024 output tokens and your prompt contains at least 7169 input tokens, for a total of at least 8193 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=7169)\", 'type': 'BadRequestError', 'param': 'input_tokens', 'code': 400}}"
+  }
+}

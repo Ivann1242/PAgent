@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "data_file": "data/dapo_holdout_512.jsonl",
+    "n": 512,
+    "workers": 24,
+    "solver_urls": [
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "solver_model": "qwen3-14b",
+    "solver_max_tokens": 8192,
+    "selector_mode": "orch",
+    "replace_threshold": 0.9,
+    "challenger_mode": "blind_ff",
+    "challenger_temperature": null,
+    "fixed_cot": null,
+    "seed": 20260817,
+    "elapsed_sec": 5640.8
+  },
+  "hintflow_one": {
+    "em": 0.5546875,
+    "baseline_em": 0.53515625,
+    "challenger_em": 0.537109375,
+    "paired_delta": 0.01953125,
+    "recovered": 50,
+    "harmed": 40,
+    "baseline_correct_retention": 0.8540145985401459,
+    "replace_count": 175,
+    "n_error": 0,
+    "sample_error": null
+  }
+}

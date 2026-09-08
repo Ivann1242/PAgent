@@ -111,13 +111,18 @@ def main() -> None:
     sp.add_argument("--limit", type=int, default=None)
     sp.add_argument("--data-file", default=None)
     sp.add_argument("--out-dir", default=None)
-    sp.add_argument("--workers", type=int, default=32)
+    sp.add_argument("--workers", type=int, default=96)
     sp.add_argument("--k", type=int, default=6, help="hint samples per baseline-wrong question")
     sp.add_argument("--hint-temp", type=float, default=0.8)
     sp.add_argument("--max-tokens", type=int, default=8192, help="solver max_tokens for baseline+hint test")
+    sp.add_argument("--seed", type=int, default=42, help="base seed (sticky id + attempt offsets)")
     sp.add_argument(
         "--only-ids-file", default=None,
         help="jsonl/ids file: only label these question ids",
+    )
+    sp.add_argument(
+        "--sticky-mode", choices=["id", "id_div4", "hash"], default="id",
+        help="id: id%%n; id_div4: (id//4)%%n; hash: spread arbitrary backlog evenly",
     )
     sp.add_argument("--answer-urls", default=None)
     sp.add_argument("--protocol", choices=["native", "paper"], default="native")
@@ -178,6 +183,12 @@ def main() -> None:
     sp.add_argument("--reward-max-tokens", type=int, default=8192)
     sp.add_argument("--reward-temperature", type=float, default=0.0,
                     help="OSS sampling temperature for reward rollouts (use 0 + repeats)")
+    sp.add_argument("--reference-adapter", default=None,
+                    help="frozen SFT adapter used as the fixed KL reference")
+    sp.add_argument("--checkpoint-every", type=int, default=10,
+                    help="upload/save cadence in optimizer steps")
+    sp.add_argument("--hf-repo", default=None,
+                    help="optional HF repo for step-N checkpoint folders")
 
     sp = sub.add_parser("ff-merge", help="Merge free-form GRPO LoRA adapter")
     sp.add_argument("--adapter-dir", default=None)
@@ -275,6 +286,8 @@ def main() -> None:
             hint_temp=args.hint_temp,
             max_tokens=args.max_tokens,
             only_ids_file=Path(args.only_ids_file) if args.only_ids_file else None,
+            base_seed=args.seed,
+            sticky_mode=args.sticky_mode,
         )
     elif args.cmd == "dpo-build":
         from dpo_data import build_dpo_pairs
@@ -345,6 +358,11 @@ def main() -> None:
             reward_repeats=args.reward_repeats,
             reward_max_tokens=args.reward_max_tokens,
             reward_temperature=args.reward_temperature,
+            reference_adapter_dir=(
+                Path(args.reference_adapter) if args.reference_adapter else None
+            ),
+            checkpoint_every=args.checkpoint_every,
+            hf_repo=args.hf_repo,
         )
     elif args.cmd == "ff-merge":
         merge_ff(

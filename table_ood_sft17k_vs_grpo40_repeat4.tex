@@ -1,0 +1,72 @@
+% OOD: SFT17k vs GRPO virtual-positive step40, HintFlow_one repeat×4 @20k.
+% Requires: \usepackage{booktabs}, \usepackage{xcolor}, \usepackage{multirow}
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.5pt}
+\caption{Out-of-distribution HintFlow\_one evaluation at fair 20k tokens
+($T{=}0$, native protocol, frozen GPT-OSS-20B, two solvers).
+Mean$\pm$stdev over 4 seeds ($41$--$44$).
+\textbf{Baseline}: no hint.
+\textbf{Challenger}: always-on free-form hint from the listed router
+(SFT 17k or GRPO virtual-positive checkpoint at step~40).
+\textbf{HF1}: KEEP/REPLACE selector over baseline vs.\ challenger
+(\texttt{replace\_threshold}${=}0.90$).
+$\Delta$ is HF1 EM minus baseline EM (mean over seeds).}
+\label{tab:ood-sft17k-vs-grpo40-r4}
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Set}
+  & \textbf{Router}
+  & \textbf{Baseline}
+  & \textbf{Challenger}
+  & \textbf{HF1}
+  & \textbf{$\Delta$ (HF1)} \\
+\midrule
+\multirow{2}{*}{DAPO-128}
+  & SFT 17k
+  & $56.1{\pm}2.1$
+  & $55.5{\pm}2.2$
+  & $57.6{\pm}1.7$
+  & \textcolor{green!60!black}{$+1.6$\,pp} \\
+  & GRPO@40
+  & $55.9{\pm}1.4$
+  & $54.3{\pm}3.2$
+  & \textbf{$58.4{\pm}1.8$}
+  & \textcolor{green!60!black}{\textbf{$+2.5$\,pp}} \\
+\midrule
+\multirow{2}{*}{AIME24}
+  & SFT 17k
+  & $66.7{\pm}8.2$
+  & $62.5{\pm}5.0$
+  & $70.8{\pm}4.2$
+  & \textcolor{green!60!black}{$+4.2$\,pp} \\
+  & GRPO@40
+  & $69.2{\pm}4.2$
+  & $62.5{\pm}6.9$
+  & \textbf{$71.7{\pm}1.9$}
+  & \textcolor{green!60!black}{$+2.5$\,pp} \\
+\midrule
+\multirow{2}{*}{MATH-500}
+  & SFT 17k
+  & $79.7{\pm}0.9$
+  & $75.0{\pm}0.8$
+  & \textbf{$80.5{\pm}0.9$}
+  & \textcolor{green!60!black}{\textbf{$+0.8$\,pp}} \\
+  & GRPO@40
+  & $80.0{\pm}0.8$
+  & $76.8{\pm}0.7$
+  & $80.2{\pm}0.7$
+  & \textcolor{green!60!black}{$+0.3$\,pp} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25em}
+{\scriptsize
+GRPO@40 is virtual-positive GRPO from Blind FF-SFT 17k
+($K{=}8$, reward repeats${=}3$, reward budget 8k, $\beta{=}0.02$, 40 steps).
+HF1 mean deltas (GRPO$-$SFT): DAPO $+0.8$\,pp, AIME $+0.8$\,pp, MATH $-0.2$\,pp.
+Challenger improves on MATH ($+1.8$\,pp) but HF1 does not; overall GRPO@40
+does not stably outperform SFT 17k under HF1.
+}
+\end{table}

@@ -31,19 +31,52 @@ def classify_action_ems(action_ems: dict[str, int]) -> tuple[str, list[str]]:
 
 
 class _AnswererPool:
-    """Round-robin OpenAI clients across multiple vLLM answerer endpoints."""
+    """OpenAI clients across multiple vLLM answerer endpoints.
 
-    def __init__(self, urls: list[str], model: str):
-        from core import make_openai_client
+    - next_client(): round-robin (legacy / load-spread when sticky not needed)
+    - client_for_key(key): sticky shard by key (reproducible across reruns when
+      each engine runs with VLLM_BATCH_INVARIANT=1)
+    """
 
-        self._clients = cycle([make_openai_client(u) for u in urls])
+    def __init__(
+        self,
+        urls: list[str],
+        model: str,
+        *,
+        timeout: float | None = None,
+        connect_timeout: float | None = None,
+    ):
+        from core import LLM_CONNECT_TIMEOUT_S, LLM_TIMEOUT_S, make_openai_client
+
+        kw: dict = {}
+        if timeout is not None:
+            kw["timeout"] = timeout
+        else:
+            kw["timeout"] = LLM_TIMEOUT_S
+        if connect_timeout is not None:
+            kw["connect_timeout"] = connect_timeout
+        else:
+            kw["connect_timeout"] = LLM_CONNECT_TIMEOUT_S
+
+        self._client_list = [make_openai_client(u, **kw) for u in urls]
+        self._clients = cycle(self._client_list)
         self._lock = threading.Lock()
         self.model = model
-        self.urls = urls
+        self.urls = list(urls)
 
     def next_client(self) -> OpenAI:
         with self._lock:
             return next(self._clients)
+
+    def client_for_key(self, key: int | str) -> OpenAI:
+        if not self._client_list:
+            raise RuntimeError("AnswererPool has no clients")
+        idx = int(key) % len(self._client_list)
+        return self._client_list[idx]
+
+    def url_for_key(self, key: int | str) -> str:
+        idx = int(key) % len(self.urls)
+        return self.urls[idx]
 
 
 def run_label(

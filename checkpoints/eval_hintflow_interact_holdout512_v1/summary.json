@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "data_file": "data/dapo_holdout_512.jsonl",
+    "n": 512,
+    "requested_n": 512,
+    "workers": 20,
+    "solver_urls": [
+      "http://127.0.0.1:8008/v1"
+    ],
+    "small_url": "http://127.0.0.1:8086/v1",
+    "small_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "solver_model": "qwen3-14b",
+    "solver_max_tokens": 8192,
+    "replace_threshold": 0.9,
+    "seed": 20260830,
+    "elapsed_sec": 9939.0,
+    "acts": [
+      "scout",
+      "plan",
+      "alt_solve",
+      "critique",
+      "revise"
+    ]
+  },
+  "interact": {
+    "em": 0.58203125,
+    "baseline_em": 0.53515625,
+    "paired_delta": 0.046875,
+    "recovered": 57,
+    "harmed": 33,
+    "replace_count": 330,
+    "mean_parseable_solves": 2.626953125,
+    "became_incumbent": {
+      "scout": 512,
+      "alt_solve": 173,
+      "revise": 157
+    },
+    "n_error": 0,
+    "sample_error": null
+  }
+}

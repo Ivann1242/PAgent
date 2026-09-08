@@ -27,7 +27,7 @@ from core import (  # noqa: E402
 ORCH_URL = "http://127.0.0.1:8086/v1"
 ORCH_MODEL = "qwen3-4b"
 SOLVER_URL = "http://127.0.0.1:8006/v1"
-SOLVER_MODEL = "gpt-oss-20b"
+SOLVER_MODEL = "qwen3-14b"
 
 RESIDUAL_ACTIONS = (
     "STOP",

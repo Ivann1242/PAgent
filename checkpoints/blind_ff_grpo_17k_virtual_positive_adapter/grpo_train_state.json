@@ -1,0 +1,13 @@
+{
+  "step": 41,
+  "cursor": 2624,
+  "batch_size": 64,
+  "k": 8,
+  "gen_batch_size": 8,
+  "reward_repeats": 3,
+  "reward_max_tokens": 8192,
+  "reward_temperature": 0.0,
+  "advantage_method": "virtual_positive_grpo",
+  "reference_adapter": "checkpoints/blind_ff_sft_17k_adapter",
+  "kl_beta": 0.02
+}

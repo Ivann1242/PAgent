@@ -1,0 +1,11 @@
+{
+  "labels_file": "checkpoints/blind_hint_17k_qwen3_14b_nothink/oracle_labels.jsonl",
+  "n_train": 11831,
+  "n_val": 1314,
+  "epochs": 3,
+  "batch_size": 4,
+  "lr": 2e-05,
+  "mode": "freeform_sft",
+  "world_size": 4,
+  "micro_batch_size": 1
+}

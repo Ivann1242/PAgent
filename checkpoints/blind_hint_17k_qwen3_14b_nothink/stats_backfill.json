@@ -1,0 +1,29 @@
+{
+  "n_questions": 17000,
+  "n_baselined": 17000,
+  "n_baseline_missing": 0,
+  "n_baseline_wrong": 10803,
+  "n_hint_candidates": 60806,
+  "n_labels": 13145,
+  "n_questions_with_label": 5020,
+  "label_rate": 0.2952941176470588,
+  "new_labels_this_run": 2290,
+  "hint_mode": "blind",
+  "k": 6,
+  "hint_temp": 0.8,
+  "max_tokens": 8192,
+  "only_ids_file": "checkpoints/blind_hint_17k_qwen3_14b_nothink/resume_ids.txt",
+  "data_file": "/home/ivaning/PAgent/data/train.jsonl",
+  "answer_urls": [
+    "http://127.0.0.1:8006/v1",
+    "http://127.0.0.1:8007/v1",
+    "http://127.0.0.1:8008/v1",
+    "http://127.0.0.1:8009/v1"
+  ],
+  "workers": 128,
+  "protocol": "native",
+  "base_seed": 42,
+  "routing": "sticky_hash",
+  "sticky_mode": "hash",
+  "answer_model": "qwen3-14b"
+}

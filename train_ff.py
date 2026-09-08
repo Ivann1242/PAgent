@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import random
+import time
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import nullcontext
 from pathlib import Path
 
 import torch
@@ -21,7 +21,12 @@ from core import (
     parse_optimizer_output,
     rollout_ff,
 )
-from grpo import completion_logprobs, encode_prompt_completion, grpo_loss, group_advantages
+from grpo import (
+    completion_logprobs,
+    encode_prompt_completion,
+    grpo_loss,
+    virtual_positive_grpo_advantages,
+)
 from label import _AnswererPool
 
 
@@ -129,11 +134,10 @@ def _generate_group(
     return completions[:k]
 
 
-def _logprobs(model, tokenizer, prompt, completion, device, *, grad=False, no_adapter=False):
+def _logprobs(model, tokenizer, prompt, completion, device, *, grad=False):
     input_ids, start = encode_prompt_completion(tokenizer, prompt, completion, device)
     ctx = torch.enable_grad() if grad else torch.inference_mode()
-    adapter_ctx = model.disable_adapter() if no_adapter else nullcontext()
-    with ctx, adapter_ctx:
+    with ctx:
         return completion_logprobs(model, input_ids, start)
 
 
@@ -163,6 +167,9 @@ def train_ff(
     reward_repeats: int = 1,
     reward_max_tokens: int = 8192,
     reward_temperature: float = 0.0,
+    reference_adapter_dir: Path | None = None,
+    checkpoint_every: int = 10,
+    hf_repo: str | None = None,
 ) -> Path:
     import json
     import os
@@ -214,6 +221,26 @@ def train_ff(
             target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
                             "gate_proj", "up_proj", "down_proj"],
         ))
+    if reference_adapter_dir is None:
+        reference_adapter_dir = init_adapter_dir
+    if reference_adapter_dir is None:
+        raise SystemExit(
+            "virtual-positive GRPO requires --reference-adapter "
+            "(normally the SFT initialization)"
+        )
+    from peft import PeftModel
+    ref_base = AutoModelForCausalLM.from_pretrained(
+        cfg.router_base,
+        torch_dtype=torch.bfloat16 if device.type == "cuda" else torch.float32,
+        trust_remote_code=True,
+    ).to(device)
+    ref_model = PeftModel.from_pretrained(
+        ref_base, Path(reference_adapter_dir), is_trainable=False,
+    )
+    ref_model.eval()
+    for param in ref_model.parameters():
+        param.requires_grad_(False)
+    print(f"fixed reference adapter -> {reference_adapter_dir}", flush=True)
     reward_repeats = max(1, int(reward_repeats))
     print(
         f"hint gen: batched num_return_sequences={k}, gen_batch_size={gen_batch_size}",
@@ -228,17 +255,32 @@ def train_ff(
     if hasattr(model, "gradient_checkpointing_enable"):
         model.gradient_checkpointing_enable()
     model.train()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    optimizer = torch.optim.AdamW(
+        (p for p in model.parameters() if p.requires_grad), lr=lr,
+    )
     optimizer.zero_grad(set_to_none=True)
+    optimizer_state_path = adapter_dir / "optimizer_state.pt"
+    if start_step > 1 and optimizer_state_path.exists():
+        saved = torch.load(optimizer_state_path, map_location=device, weights_only=False)
+        optimizer.load_state_dict(saved["optimizer"])
+        if "python_rng" in saved:
+            random.setstate(saved["python_rng"])
+        if "torch_rng" in saved:
+            torch.set_rng_state(saved["torch_rng"].cpu())
+        if device.type == "cuda" and saved.get("cuda_rng") is not None:
+            torch.cuda.set_rng_state(saved["cuda_rng"].cpu(), device=device)
+        print(f"optimizer/RNG resumed from {optimizer_state_path}", flush=True)
 
     grad_scale = 1.0 / max(batch_size * k, 1)
     skipped_groups = 0
     total_groups = 0
+    hf_repo_initialized = False
 
     def _save_step(step: int) -> None:
+        nonlocal hf_repo_initialized
         model.save_pretrained(adapter_dir)
         tokenizer.save_pretrained(adapter_dir)
-        state_path.write_text(json.dumps({
+        state = {
             "step": step,
             "cursor": cursor,
             "batch_size": batch_size,
@@ -247,7 +289,55 @@ def train_ff(
             "reward_repeats": reward_repeats,
             "reward_max_tokens": reward_max_tokens,
             "reward_temperature": reward_temperature,
-        }, indent=2) + "\n")
+            "advantage_method": "virtual_positive_grpo",
+            "reference_adapter": str(reference_adapter_dir),
+            "kl_beta": KL_BETA,
+        }
+        state_path.write_text(json.dumps(state, indent=2) + "\n")
+        torch.save({
+            "optimizer": optimizer.state_dict(),
+            "python_rng": random.getstate(),
+            "torch_rng": torch.get_rng_state(),
+            "cuda_rng": torch.cuda.get_rng_state(device) if device.type == "cuda" else None,
+        }, optimizer_state_path)
+        if hf_repo and checkpoint_every > 0 and step % checkpoint_every == 0:
+            from huggingface_hub import HfApi, create_repo
+
+            token = os.environ.get("HF_WRITE_TOKEN") or os.environ.get("HF_TOKEN")
+            if not token:
+                env_file = Path("/home/ivaning/prompt-r1r/Prompt-R1/.env")
+                if env_file.exists():
+                    values = {}
+                    for line in env_file.read_text().splitlines():
+                        line = line.strip()
+                        if not line or line.startswith("#") or "=" not in line:
+                            continue
+                        key, value = line.split("=", 1)
+                        values[key.strip()] = value.strip().strip('"').strip("'")
+                    token = values.get("HF_WRITE_TOKEN") or values.get("HF_TOKEN")
+            if not token:
+                raise RuntimeError("HF checkpoint requested but no HF token found")
+            if not hf_repo_initialized:
+                create_repo(
+                    hf_repo, repo_type="model", exist_ok=True,
+                    private=False, token=token,
+                )
+                hf_repo_initialized = True
+            api = HfApi(token=token)
+            api.upload_folder(
+                folder_path=str(adapter_dir),
+                repo_id=hf_repo,
+                repo_type="model",
+                path_in_repo=f"step-{step:04d}",
+                ignore_patterns=["README.md"],
+                commit_message=f"GRPO checkpoint step {step}",
+                token=token,
+            )
+            print(
+                f"HF checkpoint step={step} -> "
+                f"https://huggingface.co/{hf_repo}/tree/main/step-{step:04d}",
+                flush=True,
+            )
 
     def _rollout_once(row: dict, hint: str, *, small_output: str = "") -> dict:
         client = pool.next_client()
@@ -264,10 +354,12 @@ def train_ff(
         return r
 
     for step in range(start_step, max_steps + 1):
+        step_t0 = time.monotonic()
         batch = [rows[(cursor + i) % len(rows)] for i in range(batch_size)]
         cursor = (cursor + batch_size) % len(rows)
 
         groups: list[dict] = []
+        gen_t0 = time.monotonic()
         was_train = model.training
         model.eval()
         try:
@@ -293,7 +385,9 @@ def train_ff(
                     for comp in completions:
                         old_lps.append(_logprobs(model, tokenizer, opt_prompt, comp, device).detach())
                         ref_lps.append(
-                            _logprobs(model, tokenizer, opt_prompt, comp, device, no_adapter=True).detach()
+                            _logprobs(
+                                ref_model, tokenizer, opt_prompt, comp, device,
+                            ).detach()
                         )
                     groups.append({
                         "row": row,
@@ -306,6 +400,7 @@ def train_ff(
             if was_train:
                 model.train()
         _maybe_empty_cache(device)
+        gen_sec = time.monotonic() - gen_t0
 
         # Score unique (qid, hint) only once × reward_repeats, then broadcast.
         # Identical / colliding hints across K samples share the same averaged EM.
@@ -327,59 +422,122 @@ def train_ff(
             for rep_i in range(reward_repeats)
         ]
         em_lists: dict[tuple[int, str], list[int]] = {ukey: [] for ukey in unique_jobs}
+        reward_lists: dict[tuple[int, str], list[float]] = {
+            ukey: [] for ukey in unique_jobs
+        }
+        error_counts: dict[tuple[int, str], int] = {
+            ukey: 0 for ukey in unique_jobs
+        }
         workers = max(1, min(rollout_workers, len(tasks)))
         n_oss_calls = len(tasks)
         n_unique_hints = len(unique_jobs)
 
         def _rollout_task(item):
             ukey, job, rep_i = item
-            r = _rollout_once(job["row"], job["hint"], small_output=job["small_output"])
-            r["repeat_i"] = rep_i
-            r["hint_key"] = job["hint"]
-            return ukey, r
+            try:
+                r = _rollout_once(
+                    job["row"], job["hint"], small_output=job["small_output"],
+                )
+                compact = {
+                    "id": r["id"],
+                    "repeat_i": rep_i,
+                    "hint": job["hint"],
+                    "em": int(r["em"]),
+                    "reward": float(r["reward"]),
+                    "format_ok": int(r.get("format_ok") or 0),
+                    "pred_answer": r.get("pred_answer", ""),
+                    "reward_temperature": reward_temperature,
+                    "reward_max_tokens": reward_max_tokens,
+                    "error": None,
+                }
+                return ukey, compact
+            except Exception as exc:  # transient rollout failures are masked
+                return ukey, {
+                    "id": job["row"]["id"],
+                    "repeat_i": rep_i,
+                    "hint": job["hint"],
+                    "em": None,
+                    "reward": None,
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
 
+        reward_t0 = time.monotonic()
         with ThreadPoolExecutor(max_workers=workers) as ex:
             for ukey, r in ex.map(_rollout_task, tasks):
-                em_lists[ukey].append(int(r["em"]))
+                if r["error"] is None:
+                    em_lists[ukey].append(int(r["em"]))
+                    # Uses anti-leak-aware rollout reward, not raw EM.
+                    reward_lists[ukey].append(float(r["reward"]))
+                else:
+                    error_counts[ukey] += 1
                 append_jsonl(rollout_log, r)
+        reward_sec = time.monotonic() - reward_t0
 
-        reward_map: dict[tuple[int, str], float] = {}
-        em_map: dict[tuple[int, str], float] = {}
+        reward_map: dict[tuple[int, str], float | None] = {}
+        em_map: dict[tuple[int, str], float | None] = {}
+        repeat_disagreements = 0
         for ukey, ems in em_lists.items():
-            mean_em = sum(ems) / max(len(ems), 1)
-            reward_map[ukey] = float(mean_em)
-            em_map[ukey] = float(mean_em)
+            rewards_for_hint = reward_lists[ukey]
+            if not ems or not rewards_for_hint:
+                reward_map[ukey] = None
+                em_map[ukey] = None
+                continue
+            if len(set(ems)) > 1:
+                repeat_disagreements += 1
+            reward_map[ukey] = float(
+                sum(rewards_for_hint) / len(rewards_for_hint)
+            )
+            em_map[ukey] = float(sum(ems) / len(ems))
 
+        update_t0 = time.monotonic()
         step_skipped = 0
         step_em = 0.0
         step_pg = 0.0
+        step_kl = 0.0
+        step_clip = 0.0
         n_pg = 0
+        group_types = {
+            "all_correct": 0, "all_wrong": 0, "mixed": 0,
+            "tied": 0, "empty": 0,
+        }
         for g in groups:
             row = g["row"]
-            rewards, ems = [], []
-            for comp in g["completions"]:
+            valid = []
+            for comp, old_lp, ref_lp in zip(
+                g["completions"], g["old_lps"], g["ref_lps"],
+            ):
                 hint_key = comp_to_hint[(row["id"], comp)]
                 ukey = (row["id"], hint_key)
+                reward = reward_map[ukey]
                 mean_em = em_map[ukey]
-                rewards.append(reward_map[ukey])
-                ems.append(mean_em)
+                if reward is not None and mean_em is not None:
+                    valid.append((comp, old_lp, ref_lp, reward, mean_em))
 
-            advantages, mean_r, std_r, has_signal = group_advantages(rewards)
+            rewards = [item[3] for item in valid]
+            ems = [item[4] for item in valid]
+            advantages, mean_r, std_r, group_type = (
+                virtual_positive_grpo_advantages(rewards)
+            )
+            group_types[group_type] = group_types.get(group_type, 0) + 1
             total_groups += 1
-            step_em += sum(ems) / len(ems)
+            step_em += sum(ems) / len(ems) if ems else 0.0
 
-            if not has_signal:
+            if group_type == "empty":
                 step_skipped += 1
                 skipped_groups += 1
                 continue
 
-            for comp, adv, old_lp, ref_lp in zip(
-                g["completions"], advantages.tolist(), g["old_lps"], g["ref_lps"],
+            # all-correct and fractional tied groups have advantage=0 and are
+            # intentionally retained as fixed-SFT KL-only examples.
+            for (comp, old_lp, ref_lp, _, _), adv in zip(
+                valid, advantages.tolist(),
             ):
                 cur_lp = _logprobs(model, tokenizer, g["opt_prompt"], comp, device, grad=True)
                 loss, stats = grpo_loss(cur_lp, old_lp, ref_lp, adv, clip=CLIP_RANGE, beta=KL_BETA)
                 (loss * grad_scale).backward()
                 step_pg += stats["pg"]
+                step_kl += stats["kl"]
+                step_clip += stats["clip_ratio"]
                 n_pg += 1
                 del cur_lp, loss
 
@@ -387,13 +545,22 @@ def train_ff(
         optimizer.step()
         optimizer.zero_grad(set_to_none=True)
         _maybe_empty_cache(device)
+        update_sec = time.monotonic() - update_t0
+        step_sec = time.monotonic() - step_t0
 
         print(
             f"step={step}/{max_steps} batch={batch_size} k={k} gen_batch={gen_batch_size} "
             f"repeats={reward_repeats} unique_hints={n_unique_hints}/{batch_size * k} "
             f"oss_calls={n_oss_calls} em={step_em/batch_size:.0%} "
-            f"skip_groups={step_skipped}/{batch_size} "
-            f"pg={step_pg/max(n_pg,1):.3f} grad={grad_norm:.4f}",
+            f"groups=correct:{group_types['all_correct']},"
+            f"wrong:{group_types['all_wrong']},mixed:{group_types['mixed']},"
+            f"tied:{group_types['tied']},empty:{group_types['empty']} "
+            f"repeat_disagree={repeat_disagreements}/{n_unique_hints} "
+            f"api_errors={sum(error_counts.values())} "
+            f"pg={step_pg/max(n_pg,1):.4f} kl={step_kl/max(n_pg,1):.5f} "
+            f"clip={step_clip/max(n_pg,1):.3f} grad={grad_norm:.4f} "
+            f"sec=gen:{gen_sec:.1f},reward:{reward_sec:.1f},"
+            f"update:{update_sec:.1f},total:{step_sec:.1f}",
             flush=True,
         )
         _save_step(step)

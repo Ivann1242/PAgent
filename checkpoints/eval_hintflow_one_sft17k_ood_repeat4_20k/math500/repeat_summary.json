@@ -1,0 +1,86 @@
+{
+  "n_runs": 4,
+  "solver_max_tokens": 20000,
+  "orch_model": "qwen3-4b-blind-ff-17k",
+  "seeds": [
+    41,
+    42,
+    43,
+    44
+  ],
+  "em": [
+    0.798,
+    0.804,
+    0.798,
+    0.818
+  ],
+  "em_mean": 0.8045,
+  "em_stdev": 0.00943398113205656,
+  "baseline_em": [
+    0.786,
+    0.798,
+    0.794,
+    0.808
+  ],
+  "baseline_em_mean": 0.7965,
+  "baseline_em_stdev": 0.009146948489341503,
+  "challenger_em": [
+    0.744,
+    0.756,
+    0.742,
+    0.758
+  ],
+  "challenger_em_mean": 0.75,
+  "challenger_em_stdev": 0.008164965809277268,
+  "paired_delta": [
+    0.01200000000000001,
+    0.006000000000000005,
+    0.0040000000000000036,
+    0.009999999999999898
+  ],
+  "paired_delta_mean": 0.00799999999999998,
+  "total_recovered": 22,
+  "total_harmed": 6,
+  "runs": [
+    {
+      "seed": 41,
+      "em": 0.798,
+      "baseline_em": 0.786,
+      "challenger_em": 0.744,
+      "paired_delta": 0.01200000000000001,
+      "recovered": 7,
+      "harmed": 1,
+      "replace_count": 11
+    },
+    {
+      "seed": 42,
+      "em": 0.804,
+      "baseline_em": 0.798,
+      "challenger_em": 0.756,
+      "paired_delta": 0.006000000000000005,
+      "recovered": 5,
+      "harmed": 2,
+      "replace_count": 13
+    },
+    {
+      "seed": 43,
+      "em": 0.798,
+      "baseline_em": 0.794,
+      "challenger_em": 0.742,
+      "paired_delta": 0.0040000000000000036,
+      "recovered": 3,
+      "harmed": 1,
+      "replace_count": 9
+    },
+    {
+      "seed": 44,
+      "em": 0.818,
+      "baseline_em": 0.808,
+      "challenger_em": 0.758,
+      "paired_delta": 0.009999999999999898,
+      "recovered": 7,
+      "harmed": 2,
+      "replace_count": 13
+    }
+  ]
+}

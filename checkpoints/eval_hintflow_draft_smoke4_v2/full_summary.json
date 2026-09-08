@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "mode": "full",
+    "data_file": "data/dapo_holdout_512.jsonl",
+    "n": 4,
+    "n_success": 4,
+    "requested_n": 4,
+    "workers": 4,
+    "solver_urls": [
+      "http://127.0.0.1:8008/v1"
+    ],
+    "small_url": "http://127.0.0.1:8086/v1",
+    "small_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "planner_url": "http://127.0.0.1:8086/v1",
+    "planner_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "hinter_url": "http://127.0.0.1:8086/v1",
+    "hinter_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "selector_url": "http://127.0.0.1:8086/v1",
+    "selector_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "solver_model": "qwen3-14b",
+    "max_steps": 8,
+    "draft_max_tokens": 8192,
+    "step_max_tokens": 2048,
+    "planner_max_tokens": 768,
+    "hint_max_tokens": 256,
+    "selector_max_tokens": 256,
+    "temperature": 0.0,
+    "seed": 20260905,
+    "elapsed_sec": 0.0
+  },
+  "full": {
+    "em": 0.5,
+    "draft_em": 0.5,
+    "delta_vs_draft": 0.0,
+    "recovered_vs_draft": 0,
+    "harmed_vs_draft": 0,
+    "final_parseable_rate": 1.0,
+    "plan_parse_failures": 0,
+    "plan_fallbacks": 0,
+    "step_count_distribution": {
+      "2": 2,
+      "5": 1,
+      "8": 1
+    },
+    "mean_steps": 4.25,
+    "decisions": {
+      "BASELINE": 12,
+      "HINTED": 5
+    },
+    "hinted_rate": 0.29411764705882354,
+    "decisions_by_step": {
+      "1": {
+        "n": 4,
+        "baseline": 2,
+        "hinted": 2,
+        "hinted_rate": 0.5
+      },
+      "2": {
+        "n": 4,
+        "baseline": 3,
+        "hinted": 1,
+        "hinted_rate": 0.25
+      },
+      "3": {
+        "n": 2,
+        "baseline": 1,
+        "hinted": 1,
+        "hinted_rate": 0.5
+      },
+      "4": {
+        "n": 2,
+        "baseline": 1,
+        "hinted": 1,
+        "hinted_rate": 0.5
+      },
+      "5": {
+        "n": 2,
+        "baseline": 2,
+        "hinted": 0,
+        "hinted_rate": 0.0
+      },
+      "6": {
+        "n": 1,
+        "baseline": 1,
+        "hinted": 0,
+        "hinted_rate": 0.0
+      },
+      "7": {
+        "n": 1,
+        "baseline": 1,
+        "hinted": 0,
+        "hinted_rate": 0.0
+      },
+      "8": {
+        "n": 1,
+        "baseline": 1,
+        "hinted": 0,
+        "hinted_rate": 0.0
+      }
+    },
+    "selector_parse_failures": 9,
+    "selector_parse_failure_samples": [
+      {
+        "id": 17256,
+        "step_index": 1,
+        "raw": "{\"decision\":\"A | B\",\"confidence\":0.0,\"reason\":\"Both candidates provide the same answer and method, but A is more concise and directly addresses the goal of identifying the maximum volume.\"}",
+        "reason": "selector parse failure; chose baseline: ValueError"
+      },
+      {
+        "id": 17261,
+        "step_index": 3,
+        "raw": "{\"decision\":\"A | B\",\"confidence\":1.0,\"reason\":\"Both candidates provide the same correct calculation of the area of the second square.\"}",
+        "reason": "selector parse failure; chose baseline: ValueError"
+      },
+      {
+        "id": 17261,
+        "step_index": 4,
+        "raw": "{\"decision\":\"A | B\",\"confidence\":1.0,\"reason\":\"Both candidates correctly calculate the side length of the third square as 4.\"}",
+        "reason": "selector parse failure; chose baseline: ValueError"
+      },
+      {
+        "id": 17261,
+        "step_index": 5,
+        "raw": "{\"decision\":\"A | B\",\"confidence\":1.0,\"reason\":\"Both candidates provide the same correct result, so either is acceptable.\"}",
+        "reason": "selector parse failure; chose baseline: ValueError"
+      },
+      {
+        "id": 17261,
+        "step_index": 6,
+        "raw": "{\"decision\":\"A | B\",\"confidence\":1.0,\"reason\":\"Both candidates provide the same correct calculation and result.\"}",
+        "reason": "selector parse failure; chose baseline: ValueError"
+      }
+    ],
+    "premature_selected_answers": 4,
+    "mean_large_calls": 9.5,
+    "mean_small_calls": 9.5,
+    "n_error": 0,
+    "sample_error": null
+  }
+}

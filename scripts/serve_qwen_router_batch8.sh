@@ -6,7 +6,7 @@ cd /home/ivaning/PAgent
 MERGED="${MERGED:-checkpoints/blind_ff_sft_17k_merged}"
 MODEL_NAME="${MODEL_NAME:-qwen3-4b-blind-ff-17k}"
 PORT="${PORT:-8086}"
-GPU="${GPU:-3}"
+GPU="${GPU:-1}"
 UTIL="${GPU_MEM_UTIL:-0.20}"
 MAX_LEN="${MAX_MODEL_LEN:-8192}"
 MAX_NUM_SEQS="${MAX_NUM_SEQS:-8}"

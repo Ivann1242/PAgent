@@ -1,0 +1,17 @@
+{
+  "mode": "router",
+  "n": 500,
+  "requested_n": 500,
+  "em": 0.482,
+  "decisions": {
+    "BASELINE": 2029,
+    "HINTED": 471
+  },
+  "selector_parse_failures": 9,
+  "errors_or_missing": 0,
+  "elapsed_sec": 3943.4,
+  "router_model": "qwen3-4b-grpo-dedup",
+  "selector_model": "qwen3-4b-bare",
+  "n_turns": 5,
+  "solver_model": "qwen3-14b"
+}

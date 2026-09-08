@@ -24,6 +24,8 @@ checkpoints/*/adapter/tokenizer_config.json
 checkpoints/label_2048/rollouts.jsonl
 checkpoints/**/baselines.jsonl
 checkpoints/**/oracle_attempts.jsonl
+checkpoints/**/oracle_attempts.jsonl.corruptbak
+*.corruptbak
 checkpoints/**/rollouts.jsonl
 checkpoints/blind_ff_grpo_rollouts.jsonl
 checkpoints/*_rollouts.jsonl

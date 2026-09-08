@@ -28,15 +28,28 @@ from core import (  # noqa: E402
 ORCH_URL = "http://127.0.0.1:8086/v1"
 ORCH_MODEL = "qwen3-4b-blind-ff-17k"
 SOLVER_URL = "http://127.0.0.1:8006/v1"
-SOLVER_MODEL = "gpt-oss-20b"
+SOLVER_MODEL = "qwen3-14b"
 
 SELECTOR_SYSTEM = """You are a conservative pairwise math-solution selector.
-Compare an incumbent (bare baseline) and a challenger (hinted solve) for the same
-problem. Select REPLACE only when the challenger is clearly more likely to contain
+Compare an incumbent (bare baseline) and a challenger for the same problem.
+Select REPLACE only when the challenger is clearly more likely to contain
 the correct requested final answer. If uncertain, KEEP the incumbent.
 
 Output ONLY valid JSON:
 {"decision":"KEEP | REPLACE","confidence":0.0,"reason":"short concrete reason"}"""
+
+CHALLENGER_MODES = ("blind_ff", "resample_baseline", "fixed_cot")
+
+DEFAULT_FIXED_COT = (
+    "Think step by step. Write a clear chain of reasoning before the final answer. "
+    "Double-check arithmetic and algebraic manipulations. Do not skip intermediate steps."
+)
+
+CHALLENGER_PROMPT_LABEL = {
+    "blind_ff": "CHALLENGER — Blind FF hinted solve",
+    "resample_baseline": "CHALLENGER — resampled bare baseline (higher temperature)",
+    "fixed_cot": "CHALLENGER — fixed chain-of-thought prompt",
+}
 
 
 def _message_text(resp: Any) -> str:
@@ -91,11 +104,20 @@ def parse_selection(text: str) -> "Selection":
     )
 
 
-def build_selection_prompt(problem: str, incumbent: "Candidate", challenger: "Candidate") -> str:
+def build_selection_prompt(
+    problem: str,
+    incumbent: "Candidate",
+    challenger: "Candidate",
+    *,
+    challenger_mode: str = "blind_ff",
+) -> str:
+    chal_label = CHALLENGER_PROMPT_LABEL.get(
+        challenger_mode, "CHALLENGER — alternative solve"
+    )
     return (
         f"Problem:\n{_clip(problem, 5000)}\n\n"
         f"[INCUMBENT — bare baseline]\n{_clip(incumbent.solution, 6500)}\n\n"
-        f"[CHALLENGER — Blind FF hinted solve]\n{_clip(challenger.solution, 6500)}\n\n"
+        f"[{chal_label}]\n{_clip(challenger.solution, 6500)}\n\n"
         "Choose KEEP or REPLACE. Prefer KEEP when evidence is inconclusive."
     )
 
@@ -141,7 +163,7 @@ class OneTrajectory:
 
 
 class HintFlowOneAgent:
-    """Blind FF challenger with baseline-first conservative selection."""
+    """Baseline-first KEEP/REPLACE; challenger can be Blind FF / resample / fixed CoT."""
 
     def __init__(
         self,
@@ -153,6 +175,9 @@ class HintFlowOneAgent:
         solver_max_tokens: int = 20000,
         orch_temperature: float = 0.0,
         solver_temperature: float = 0.0,
+        challenger_mode: str = "blind_ff",
+        challenger_temperature: float | None = None,
+        fixed_cot: str = DEFAULT_FIXED_COT,
         replace_threshold: float = 0.90,
         selector_mode: str = "orch",
         request_timeout: float = 3600.0,
@@ -160,6 +185,8 @@ class HintFlowOneAgent:
     ) -> None:
         if selector_mode not in {"orch", "keep", "replace"}:
             raise ValueError("selector_mode must be orch, keep, or replace")
+        if challenger_mode not in CHALLENGER_MODES:
+            raise ValueError(f"challenger_mode must be one of {CHALLENGER_MODES}")
         self.orch = OpenAI(
             base_url=orch_url, api_key="EMPTY", max_retries=0, timeout=request_timeout
         )
@@ -171,6 +198,15 @@ class HintFlowOneAgent:
         self.solver_max_tokens = solver_max_tokens
         self.orch_temperature = orch_temperature
         self.solver_temperature = solver_temperature
+        self.challenger_mode = challenger_mode
+        if challenger_temperature is None:
+            # Resample needs T>0; fixed_cot / blind_ff default to greedy like baseline.
+            self.challenger_temperature = (
+                0.7 if challenger_mode == "resample_baseline" else solver_temperature
+            )
+        else:
+            self.challenger_temperature = float(challenger_temperature)
+        self.fixed_cot = (fixed_cot or DEFAULT_FIXED_COT).strip()
         self.replace_threshold = min(max(replace_threshold, 0.0), 1.0)
         self.selector_mode = selector_mode
         self.solver_seed = solver_seed
@@ -196,17 +232,19 @@ class HintFlowOneAgent:
         )
         return _message_text(resp)
 
-    def _solver_chat(self, prompt: str) -> str:
+    def _solver_chat(self, prompt: str, *, temperature: float | None = None) -> str:
+        temp = self.solver_temperature if temperature is None else temperature
         kwargs: dict[str, Any] = {
             "model": self.solver_model,
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": self.solver_temperature,
+            "temperature": temp,
             "max_tokens": self.solver_max_tokens,
+            "extra_body": {"chat_template_kwargs": {"enable_thinking": False}},
         }
         if self.solver_seed is not None:
-            kwargs["extra_body"] = {
-                "seed": int(self.solver_seed + self._solver_call_index)
-            }
+            kwargs["extra_body"]["seed"] = int(
+                self.solver_seed + self._solver_call_index
+            )
         self._solver_call_index += 1
         resp = self.solver.chat.completions.create(**kwargs)
         return _message_text(resp)
@@ -234,7 +272,7 @@ class HintFlowOneAgent:
 
     def generate_baseline(self, problem: str, *, gold: str = "") -> Candidate:
         prompt = build_large_prompt(problem, "")
-        solution = self._solver_chat(prompt)
+        solution = self._solver_chat(prompt, temperature=self.solver_temperature)
         return self._candidate(
             source="BASELINE", prompt=prompt, solution=solution, gold=gold
         )
@@ -249,9 +287,14 @@ class HintFlowOneAgent:
         self, problem: str, hint: str, *, gold: str = ""
     ) -> Candidate:
         prompt = build_large_prompt(problem, hint)
-        solution = self._solver_chat(prompt)
+        solution = self._solver_chat(prompt, temperature=self.challenger_temperature)
+        source = {
+            "blind_ff": "FF_CHALLENGER",
+            "resample_baseline": "RESAMPLE_CHALLENGER",
+            "fixed_cot": "FIXED_COT_CHALLENGER",
+        }[self.challenger_mode]
         return self._candidate(
-            source="FF_CHALLENGER",
+            source=source,
             prompt=prompt,
             solution=solution,
             gold=gold,
@@ -277,7 +320,12 @@ class HintFlowOneAgent:
             return Selection(reason="same normalized candidate answer")
         try:
             text = self._orch_chat(
-                build_selection_prompt(problem, incumbent, challenger),
+                build_selection_prompt(
+                    problem,
+                    incumbent,
+                    challenger,
+                    challenger_mode=self.challenger_mode,
+                ),
                 system=SELECTOR_SYSTEM,
                 max_tokens=192,
             )
@@ -287,13 +335,28 @@ class HintFlowOneAgent:
                 reason=f"selector failure; kept incumbent: {type(exc).__name__}"
             )
 
-    def run(self, problem: str, *, gold: str = "") -> OneTrajectory:
+    def run(
+        self, problem: str, *, gold: str = "", baseline_solution: str | None = None,
+    ) -> OneTrajectory:
         traj = OneTrajectory(problem=problem, gold=gold)
-        baseline = self.generate_baseline(problem, gold=gold)
+        if baseline_solution is None:
+            baseline = self.generate_baseline(problem, gold=gold)
+        else:
+            baseline = self._candidate(
+                source="CACHED_BASELINE",
+                prompt=build_large_prompt(problem, ""),
+                solution=baseline_solution,
+                gold=gold,
+            )
         traj.baseline = baseline
         traj.baseline_em = baseline.em
 
-        hint, hint_raw, hint_ok = self.generate_hint(problem)
+        if self.challenger_mode == "blind_ff":
+            hint, hint_raw, hint_ok = self.generate_hint(problem)
+        elif self.challenger_mode == "fixed_cot":
+            hint, hint_raw, hint_ok = self.fixed_cot, self.fixed_cot, True
+        else:  # resample_baseline: same bare prompt, higher T
+            hint, hint_raw, hint_ok = "", "", True
         traj.hint = hint
         traj.hint_raw = hint_raw
         traj.hint_parse_ok = hint_ok
@@ -320,6 +383,8 @@ class HintFlowOneAgent:
 
 
 __all__ = [
+    "CHALLENGER_MODES",
+    "DEFAULT_FIXED_COT",
     "Candidate",
     "HintFlowOneAgent",
     "OneTrajectory",

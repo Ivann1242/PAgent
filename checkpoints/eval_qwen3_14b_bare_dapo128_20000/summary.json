@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "data": "/home/ivaning/PAgent/data/DAPO-Math.parquet",
+    "n": 128,
+    "max_tokens": 20000,
+    "workers": 48,
+    "solver_model": "qwen3-14b",
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1",
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1",
+      "http://127.0.0.1:8009/v1"
+    ],
+    "seed": 42,
+    "protocol": "bare_native_qwen3_14b"
+  },
+  "live_baseline": {
+    "em": 0.5859375,
+    "format_accuracy": 0.0,
+    "avg_reward": 0.0,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "?": 128
+    },
+    "per_action_em": {},
+    "n": 128
+  },
+  "elapsed_sec": 748.9
+}

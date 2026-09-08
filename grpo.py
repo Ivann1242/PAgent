@@ -6,6 +6,42 @@ import torch
 import torch.nn.functional as F
 
 
+def virtual_positive_grpo_advantages(
+    rewards: list[float],
+    *,
+    eps: float = 1e-6,
+) -> tuple[torch.Tensor, float, float, str]:
+    """Standard GRPO advantages with explicit handling for degenerate groups.
+
+    Mixed groups use the usual within-group mean/std normalization.
+    All-correct groups receive zero policy-gradient advantage (KL-only).
+    All-wrong groups append one virtual reward=1 for normalization only; the
+    virtual item never participates in backprop.  For K real zero rewards this
+    gives every real completion advantage -1/sqrt(K).
+    """
+    t = torch.tensor(rewards, dtype=torch.float32)
+    if t.numel() == 0:
+        return t, 0.0, 0.0, "empty"
+
+    mean_r = float(t.mean())
+    std_r = float(t.std(unbiased=False))
+    if bool(torch.all(t >= 1.0 - eps)):
+        return torch.zeros_like(t), mean_r, std_r, "all_correct"
+    if bool(torch.all(t <= eps)):
+        augmented = torch.cat([t, torch.ones(1, dtype=t.dtype)])
+        aug_mean = augmented.mean()
+        aug_std = augmented.std(unbiased=False)
+        adv = (t - aug_mean) / (aug_std + eps)
+        return adv, mean_r, std_r, "all_wrong"
+    if std_r <= eps:
+        # Repeat-averaged rewards can tie at 1/3 or 2/3. There is no relative
+        # correctness signal, so keep this group KL-only.
+        return torch.zeros_like(t), mean_r, std_r, "tied"
+
+    adv = (t - t.mean()) / (t.std(unbiased=False) + eps)
+    return adv, mean_r, std_r, "mixed"
+
+
 def group_advantages(
     rewards: list[float],
     *,
@@ -86,6 +122,6 @@ def grpo_loss(
         ((ratio < 1.0 - clip) & (adv < 0) | (ratio > 1.0 + clip) & (adv > 0))
         .float().mean().detach().cpu()
     )
-    # Sum token losses so centered advantages still yield a non-zero objective.
-    pg_scalar = float(pg.sum().detach().cpu())
-    return pg.sum(), {"clip_ratio": clipped_frac, "kl": kl, "pg": pg_scalar}
+    # Normalize within each completion so long hints do not dominate updates.
+    pg_scalar = float(pg.mean().detach().cpu())
+    return pg.mean(), {"clip_ratio": clipped_frac, "kl": kl, "pg": pg_scalar}

@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "data_file": "data/aime24.jsonl",
+    "n": 30,
+    "workers": 16,
+    "solver_urls": [
+      "http://127.0.0.1:8006/v1",
+      "http://127.0.0.1:8007/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b-blind-ff-17k",
+    "solver_model": "gpt-oss-20b",
+    "solver_max_tokens": 20000,
+    "selector_mode": "orch",
+    "replace_threshold": 0.9,
+    "seed": 41,
+    "elapsed_sec": 448.4
+  },
+  "hintflow_one": {
+    "em": 0.6666666666666666,
+    "baseline_em": 0.5666666666666667,
+    "challenger_em": 0.6666666666666666,
+    "paired_delta": 0.09999999999999998,
+    "recovered": 4,
+    "harmed": 1,
+    "baseline_correct_retention": 0.9411764705882353,
+    "replace_count": 7,
+    "n_error": 0,
+    "sample_error": null
+  }
+}

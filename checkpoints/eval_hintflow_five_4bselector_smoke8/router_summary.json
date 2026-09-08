@@ -1,0 +1,16 @@
+{
+  "mode": "router",
+  "n": 8,
+  "requested_n": 8,
+  "em": 0.375,
+  "decisions": {
+    "BASELINE": 40
+  },
+  "selector_parse_failures": 25,
+  "errors_or_missing": 0,
+  "elapsed_sec": 300.5,
+  "router_model": "qwen3-4b-blind-ff-17k",
+  "selector_model": "qwen3-4b-blind-ff-17k",
+  "n_turns": 5,
+  "solver_model": "qwen3-14b"
+}

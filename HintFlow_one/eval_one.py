@@ -22,6 +22,8 @@ for p in (_ROOT, _HERE):
 from config import EVAL_PARQUET  # noqa: E402
 from core import append_jsonl, load_dapo_rows, load_jsonl, write_jsonl  # noqa: E402
 from one_agent import (  # noqa: E402
+    CHALLENGER_MODES,
+    DEFAULT_FIXED_COT,
     ORCH_MODEL,
     ORCH_URL,
     SOLVER_MODEL,
@@ -57,6 +59,9 @@ def _eval_row(
     selector_mode: str,
     replace_threshold: float,
     seed: int,
+    challenger_mode: str,
+    challenger_temperature: float | None,
+    fixed_cot: str,
 ) -> dict:
     solver_url = rr.next()
     try:
@@ -68,14 +73,21 @@ def _eval_row(
             solver_max_tokens=solver_max_tokens,
             selector_mode=selector_mode,
             replace_threshold=replace_threshold,
+            challenger_mode=challenger_mode,
+            challenger_temperature=challenger_temperature,
+            fixed_cot=fixed_cot,
             solver_seed=seed + int(row["id"]) * 100,
         )
-        traj = agent.run(row["problem"], gold=row["gold"])
+        traj = agent.run(
+            row["problem"], gold=row["gold"],
+            baseline_solution=row.get("baseline_solution"),
+        )
         rec = traj.to_dict()
         rec.update(
             {
                 "id": row["id"],
                 "solver_url": solver_url,
+                "challenger_mode": challenger_mode,
                 "error": None,
             }
         )
@@ -92,6 +104,7 @@ def _eval_row(
             "recovered": 0,
             "harmed": 0,
             "solver_url": solver_url,
+            "challenger_mode": challenger_mode,
             "error": f"{type(e).__name__}: {e}",
         }
 
@@ -130,6 +143,7 @@ def _mean(vals: list[float]) -> float:
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data-file", default=None)
+    p.add_argument("--baseline-file", default=None)
     p.add_argument("--limit", type=int, default=None, help="cap rows; default=all")
     p.add_argument("--workers", type=int, default=4)
     p.add_argument("--solver-urls", default=",".join(DEFAULT_SOLVER_URLS))
@@ -144,6 +158,19 @@ def main() -> None:
         help="orch=conservative selector; keep=always baseline; replace=always FF",
     )
     p.add_argument("--replace-threshold", type=float, default=0.90)
+    p.add_argument(
+        "--challenger-mode",
+        choices=CHALLENGER_MODES,
+        default="blind_ff",
+        help="blind_ff=trained hint; resample_baseline=bare@T>0; fixed_cot=static CoT",
+    )
+    p.add_argument(
+        "--challenger-temperature",
+        type=float,
+        default=None,
+        help="override challenger sampling T (default: 0.7 for resample, else 0)",
+    )
+    p.add_argument("--fixed-cot", default=DEFAULT_FIXED_COT)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument(
         "--out-dir",
@@ -163,6 +190,22 @@ def main() -> None:
             if r.get("id") not in by_id:
                 by_id[r["id"]] = r
         rows = [by_id[i] for i in sorted(by_id)]
+    if args.baseline_file:
+        cached = {}
+        for rec in load_jsonl(Path(args.baseline_file)):
+            rid = rec.get("id")
+            solution = rec.get("large_output")
+            if solution is None and isinstance(rec.get("baseline"), dict):
+                solution = rec["baseline"].get("solution")
+            if rid is not None and solution:
+                cached[rid] = solution
+        missing = [row["id"] for row in rows if row["id"] not in cached]
+        if missing:
+            raise SystemExit(
+                f"baseline cache missing {len(missing)}/{len(rows)} ids; examples={missing[:5]}"
+            )
+        for row in rows:
+            row["baseline_solution"] = cached[row["id"]]
     if args.limit is not None:
         rows = rows[: args.limit]
     if not rows:
@@ -171,10 +214,13 @@ def main() -> None:
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_jsonl = out_dir / "hintflow_one.jsonl"
+    chal_temp = args.challenger_temperature
+    if chal_temp is None and args.challenger_mode == "resample_baseline":
+        chal_temp = 0.7
     print(
         f"HintFlow_one eval: n={len(rows)} workers={args.workers} "
-        f"selector={args.selector_mode} tokens={args.solver_max_tokens} "
-        f"seed={args.seed}",
+        f"selector={args.selector_mode} challenger={args.challenger_mode} "
+        f"chal_T={chal_temp} tokens={args.solver_max_tokens} seed={args.seed}",
         flush=True,
     )
     t0 = time.time()
@@ -191,9 +237,12 @@ def main() -> None:
             selector_mode=args.selector_mode,
             replace_threshold=args.replace_threshold,
             seed=args.seed,
+            challenger_mode=args.challenger_mode,
+            challenger_temperature=chal_temp,
+            fixed_cot=args.fixed_cot,
         ),
         workers=args.workers,
-        desc="hintflow_one",
+        desc=f"hf1_{args.challenger_mode}",
         resume_path=out_jsonl,
     )
     write_jsonl(out_jsonl, records)
@@ -231,6 +280,9 @@ def main() -> None:
             "solver_max_tokens": args.solver_max_tokens,
             "selector_mode": args.selector_mode,
             "replace_threshold": args.replace_threshold,
+            "challenger_mode": args.challenger_mode,
+            "challenger_temperature": chal_temp,
+            "fixed_cot": args.fixed_cot if args.challenger_mode == "fixed_cot" else None,
             "seed": args.seed,
             "elapsed_sec": round(time.time() - t0, 1),
         },

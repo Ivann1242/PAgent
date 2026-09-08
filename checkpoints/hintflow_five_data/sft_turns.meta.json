@@ -1,0 +1,7 @@
+{
+  "n_questions": 2048,
+  "n_turn_samples": 10240,
+  "expected_turn_samples": 10240,
+  "n_iid": 512,
+  "train_iid_overlap": 0
+}

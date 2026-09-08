@@ -1,0 +1,16 @@
+{
+  "n_paired": 64,
+  "n_success_both": 63,
+  "note": "first 64 of holdout512; official rates count the 1 draft context error as 0",
+  "hf1_em": 0.578125,
+  "hf1_baseline_em": 0.546875,
+  "hf1_recovered": 7,
+  "hf1_harmed": 5,
+  "draft_em": 0.59375,
+  "draft_bare_em": 0.5,
+  "draft_recovered": 7,
+  "draft_harmed": 1,
+  "draft_beats_hf1": 5,
+  "hf1_beats_draft": 4,
+  "delta_vs_hf1": 0.015625
+}

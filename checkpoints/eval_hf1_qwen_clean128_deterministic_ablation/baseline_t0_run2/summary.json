@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "data_file": "checkpoints/blind_hint_17k_qwen3_14b_nothink/oracle_labels_clean_train_sample128.jsonl",
+    "n": 128,
+    "workers": 32,
+    "solver_urls": [
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8086/v1",
+    "orch_model": "qwen3-4b-blind-ff-17k",
+    "solver_model": "qwen3-14b",
+    "solver_max_tokens": 8192,
+    "selector_mode": "replace",
+    "replace_threshold": 0.9,
+    "challenger_mode": "resample_baseline",
+    "challenger_temperature": 0.0,
+    "fixed_cot": null,
+    "seed": 41,
+    "elapsed_sec": 3503.5
+  },
+  "hintflow_one": {
+    "em": 0.6015625,
+    "baseline_em": 0.6015625,
+    "challenger_em": 0.6015625,
+    "paired_delta": 0.0,
+    "recovered": 0,
+    "harmed": 0,
+    "baseline_correct_retention": 1.0,
+    "replace_count": 128,
+    "n_error": 0,
+    "sample_error": null
+  }
+}

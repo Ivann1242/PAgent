@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "labels_file": "checkpoints/blind_hint_17k_qwen3_14b_nothink/oracle_labels_clean_train_sample500.jsonl",
+    "n_questions": 500,
+    "router_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "router_url": "http://127.0.0.1:8086/v1",
+    "answer_urls": [
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1"
+    ],
+    "protocol": "native",
+    "modes": [
+      "live_baseline",
+      "ff_router",
+      "oracle_hint"
+    ],
+    "max_tokens": 8192
+  },
+  "live_baseline": {
+    "em": 0.0,
+    "format_accuracy": 0.592,
+    "avg_reward": 0.0,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "baseline": 500
+    },
+    "per_action_em": {
+      "baseline": 0.0
+    },
+    "n": 500
+  },
+  "ff_router": {
+    "em": 0.482,
+    "format_accuracy": 0.51,
+    "avg_reward": 0.482,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "freeform": 500
+    },
+    "per_action_em": {},
+    "n": 500
+  },
+  "oracle_hint": {
+    "em": 1.0,
+    "format_accuracy": 0.566,
+    "avg_reward": 1.0,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "oracle_hint": 500
+    },
+    "per_action_em": {},
+    "n": 500
+  },
+  "ff_router_vs_live_baseline": 0.482,
+  "ff_router_vs_oracle_hint": -0.518
+}

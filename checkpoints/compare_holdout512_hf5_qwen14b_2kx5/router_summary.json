@@ -1,0 +1,15 @@
+{
+  "mode": "router",
+  "n": 512,
+  "requested_n": 512,
+  "em": 0.486328125,
+  "decisions": {
+    "BASELINE": 1657,
+    "HINTED": 903
+  },
+  "selector_parse_failures": 7,
+  "errors_or_missing": 0,
+  "elapsed_sec": 4405.8,
+  "router_model": "hintflow-five-router",
+  "solver_model": "qwen3-14b"
+}

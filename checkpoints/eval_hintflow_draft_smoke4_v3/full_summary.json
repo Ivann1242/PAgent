@@ -1,0 +1,109 @@
+{
+  "meta": {
+    "mode": "full",
+    "data_file": "data/dapo_holdout_512.jsonl",
+    "n": 4,
+    "n_success": 4,
+    "requested_n": 4,
+    "workers": 4,
+    "solver_urls": [
+      "http://127.0.0.1:8008/v1"
+    ],
+    "small_url": "http://127.0.0.1:8086/v1",
+    "small_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "planner_url": "http://127.0.0.1:8086/v1",
+    "planner_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "hinter_url": "http://127.0.0.1:8086/v1",
+    "hinter_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "selector_url": "http://127.0.0.1:8086/v1",
+    "selector_model": "qwen3-4b-blind-ff-grpo-clean-iid-vp-step200",
+    "solver_model": "qwen3-14b",
+    "max_steps": 8,
+    "draft_max_tokens": 8192,
+    "step_max_tokens": 2048,
+    "planner_max_tokens": 768,
+    "hint_max_tokens": 256,
+    "selector_max_tokens": 256,
+    "temperature": 0.0,
+    "seed": 20260905,
+    "elapsed_sec": 540.4
+  },
+  "full": {
+    "em": 0.5,
+    "draft_em": 0.5,
+    "delta_vs_draft": 0.0,
+    "recovered_vs_draft": 0,
+    "harmed_vs_draft": 0,
+    "final_parseable_rate": 1.0,
+    "plan_parse_failures": 0,
+    "plan_fallbacks": 0,
+    "step_count_distribution": {
+      "2": 2,
+      "5": 1,
+      "8": 1
+    },
+    "mean_steps": 4.25,
+    "decisions": {
+      "HINTED": 11,
+      "BASELINE": 6
+    },
+    "hinted_rate": 0.6470588235294118,
+    "decisions_by_step": {
+      "1": {
+        "n": 4,
+        "baseline": 1,
+        "hinted": 3,
+        "hinted_rate": 0.75
+      },
+      "2": {
+        "n": 4,
+        "baseline": 1,
+        "hinted": 3,
+        "hinted_rate": 0.75
+      },
+      "3": {
+        "n": 2,
+        "baseline": 1,
+        "hinted": 1,
+        "hinted_rate": 0.5
+      },
+      "4": {
+        "n": 2,
+        "baseline": 1,
+        "hinted": 1,
+        "hinted_rate": 0.5
+      },
+      "5": {
+        "n": 2,
+        "baseline": 0,
+        "hinted": 2,
+        "hinted_rate": 1.0
+      },
+      "6": {
+        "n": 1,
+        "baseline": 1,
+        "hinted": 0,
+        "hinted_rate": 0.0
+      },
+      "7": {
+        "n": 1,
+        "baseline": 1,
+        "hinted": 0,
+        "hinted_rate": 0.0
+      },
+      "8": {
+        "n": 1,
+        "baseline": 0,
+        "hinted": 1,
+        "hinted_rate": 1.0
+      }
+    },
+    "selector_parse_failures": 0,
+    "selector_parse_failure_samples": [],
+    "premature_selected_answers": 4,
+    "mean_large_calls": 9.5,
+    "mean_small_calls": 9.5,
+    "n_error": 0,
+    "sample_error": null
+  }
+}

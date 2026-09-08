@@ -1,0 +1,15 @@
+{
+  "mode": "oracle",
+  "n": 512,
+  "requested_n": 512,
+  "em": 0.46484375,
+  "decisions": {
+    "BASELINE": 1613,
+    "HINTED": 947
+  },
+  "selector_parse_failures": 3,
+  "errors_or_missing": 0,
+  "elapsed_sec": 2557.2,
+  "router_model": null,
+  "solver_model": "qwen3-14b"
+}

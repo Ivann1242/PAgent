@@ -14,9 +14,34 @@ import time
 import pandas as pd
 from openai import APIConnectionError, APITimeoutError, OpenAI
 
-# Long 20k generations + queue wait can exceed the OpenAI default 600s read timeout.
+# Long generations + queue wait can exceed OpenAI's default 600s read timeout.
+# Keep a long *read* timeout, but fail fast on dead endpoints via short connect timeout
+# (otherwise sticky routing + a crashed shard starves the whole worker pool).
 LLM_TIMEOUT_S = 3600.0
+LLM_CONNECT_TIMEOUT_S = 10.0
 LLM_MAX_RETRIES = 3
+LLM_LABEL_TIMEOUT_S = 900.0  # 8k-token solve + queue; labeling default
+
+# Qwen3 defaults to thinking; disable for solver throughput + stable short answers.
+SOLVER_EXTRA_BODY = {"chat_template_kwargs": {"enable_thinking": False}}
+
+
+def merge_extra_body(*parts: dict | None) -> dict:
+    """Shallow-merge extra_body dicts; deep-merge chat_template_kwargs."""
+    out: dict = {}
+    for part in parts:
+        if not part:
+            continue
+        for k, v in part.items():
+            if (
+                k == "chat_template_kwargs"
+                and isinstance(v, dict)
+                and isinstance(out.get(k), dict)
+            ):
+                out[k] = {**out[k], **v}
+            else:
+                out[k] = v
+    return out
 
 ACTION_SPACE = {
     "baseline": "",
@@ -218,9 +243,11 @@ def _clean_answer_span(text: str) -> str:
 
 
 def extract_final_answer(text: str) -> str:
-    # Supports plain, Markdown-bold, boxed, and next-line final answers.
+    # Supports plain, Markdown heading (###), bold, boxed, and next-line finals.
+    # Qwen3-nothink often emits "### Final Answer: 79" — the heading markers
+    # must be optional or the whole completion is wrongly returned as pred.
     label = re.compile(
-        r"(?:^|\n)\s*(?:\*\*)?\s*Final\s+Answer\s*:\s*(?:\*\*)?",
+        r"(?:^|\n)\s*(?:#{1,6}\s+)?(?:\*\*)?\s*Final\s+Answer\s*:\s*(?:\*\*)?",
         re.IGNORECASE,
     )
     matches = list(label.finditer(text))
@@ -419,8 +446,18 @@ def append_jsonl(path: Path, row: dict) -> None:
         f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
-def make_openai_client(base_url: str, *, api_key: str = "EMPTY", timeout: float = LLM_TIMEOUT_S) -> OpenAI:
-    return OpenAI(base_url=base_url, api_key=api_key, timeout=timeout)
+def make_openai_client(
+    base_url: str,
+    *,
+    api_key: str = "EMPTY",
+    timeout: float = LLM_TIMEOUT_S,
+    connect_timeout: float = LLM_CONNECT_TIMEOUT_S,
+) -> OpenAI:
+    import httpx
+
+    # float timeout alone applies to connect+read; split so dead ports don't hang workers.
+    to = httpx.Timeout(timeout, connect=connect_timeout)
+    return OpenAI(base_url=base_url, api_key=api_key, timeout=to)
 
 
 def call_llm(
@@ -431,6 +468,7 @@ def call_llm(
     system: str | None = None,
     temperature: float = 0.0,
     max_tokens: int = 4096,
+    seed: int | None = None,
     extra_body: dict | None = None,
 ) -> str:
     messages = []
@@ -443,8 +481,12 @@ def call_llm(
         temperature=temperature,
         max_tokens=max_tokens,
     )
-    if extra_body:
-        kwargs["extra_body"] = extra_body
+    body = merge_extra_body(SOLVER_EXTRA_BODY, extra_body)
+    if seed is not None:
+        kwargs["seed"] = int(seed)
+        body.setdefault("seed", int(seed))
+    if body:
+        kwargs["extra_body"] = body
     last_err: Exception | None = None
     for attempt in range(1, LLM_MAX_RETRIES + 1):
         try:
@@ -452,11 +494,13 @@ def call_llm(
             break
         except (APITimeoutError, APIConnectionError) as e:
             last_err = e
-            if attempt >= LLM_MAX_RETRIES:
+            # Connection errors usually mean a dead shard — fail fast (1 retry).
+            max_tries = 2 if isinstance(e, APIConnectionError) else LLM_MAX_RETRIES
+            if attempt >= max_tries:
                 raise
-            wait = min(30.0, 2.0 ** attempt)
+            wait = min(10.0, 2.0 ** attempt)
             print(
-                f"[call_llm] {type(e).__name__} attempt {attempt}/{LLM_MAX_RETRIES}; "
+                f"[call_llm] {type(e).__name__} attempt {attempt}/{max_tries}; "
                 f"retry in {wait:.0f}s",
                 flush=True,
             )
@@ -536,6 +580,7 @@ def rollout_ff(
     max_tokens: int = 8192,
     temperature: float = 0.0,
     protocol: str = "native",
+    seed: int | None = None,
 ) -> dict:
     hint = hint.strip()
     if protocol == "paper":
@@ -543,7 +588,7 @@ def rollout_ff(
         large_output = call_llm(
             answer_client, answer_model, large_prompt,
             system=OSS_SYSTEM_PROMPT,
-            temperature=temperature, max_tokens=max_tokens,
+            temperature=temperature, max_tokens=max_tokens, seed=seed,
         )
         pred = extract_paper_answer(large_output)
         em = exact_match(pred, gold)
@@ -555,7 +600,7 @@ def rollout_ff(
         large_prompt = build_large_prompt(problem, hint)
         large_output = call_llm(
             answer_client, answer_model, large_prompt,
-            temperature=temperature, max_tokens=max_tokens,
+            temperature=temperature, max_tokens=max_tokens, seed=seed,
         )
         pred = extract_final_answer(large_output)
         reward, em, format_ok = compute_ff_reward(pred, gold, hint, large_output)

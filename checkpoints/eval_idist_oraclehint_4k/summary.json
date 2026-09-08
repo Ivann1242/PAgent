@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "labels_file": "checkpoints/blind_hint_17k/oracle_labels_dedup.jsonl",
+    "n_questions": 1809,
+    "router_model": "qwen3-4b-blind-ff-17k",
+    "router_url": "http://127.0.0.1:8086/v1",
+    "answer_urls": [
+      "http://127.0.0.1:8006/v1",
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1",
+      "http://127.0.0.1:8009/v1"
+    ],
+    "protocol": "native",
+    "modes": [
+      "oracle_hint"
+    ],
+    "max_tokens": 4096
+  },
+  "oracle_hint": {
+    "em": 0.4306246545052515,
+    "format_accuracy": 0.4096185737976783,
+    "avg_reward": 0.4295190713101161,
+    "invalid_action_rate": 0.0,
+    "action_distribution": {
+      "oracle_hint": 1809
+    },
+    "per_action_em": {},
+    "n": 1809
+  }
+}

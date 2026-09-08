@@ -26,8 +26,9 @@ ANSWER_URLS = [
     "http://127.0.0.1:8008/v1",
     "http://127.0.0.1:8009/v1",
 ]
-ANSWER_MODEL = "gpt-oss-20b"
-OSS_MODEL_PATH = Path("/home/ivaning/models/gpt-oss-20b")
+ANSWER_MODEL = "qwen3-14b"
+OSS_MODEL_PATH = Path("/home/ivaning/models/Qwen3-14B")
+SOLVER_MODEL_PATH = OSS_MODEL_PATH
 ROUTER_URL = "http://127.0.0.1:8083/v1"
 ROUTER_MODEL = "qwen3-4b"
 TRAINED_ROUTER_MODEL = "qwen3-4b-router"

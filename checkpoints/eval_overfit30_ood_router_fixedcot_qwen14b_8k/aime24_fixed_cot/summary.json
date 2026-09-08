@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "data_file": "data/aime24.jsonl",
+    "n": 30,
+    "workers": 32,
+    "solver_urls": [
+      "http://127.0.0.1:8007/v1",
+      "http://127.0.0.1:8008/v1"
+    ],
+    "orch_url": "http://127.0.0.1:8087/v1",
+    "orch_model": "qwen3-14b-blind-ff-clean-overfit30",
+    "solver_model": "qwen3-14b",
+    "solver_max_tokens": 8192,
+    "selector_mode": "replace",
+    "replace_threshold": 0.9,
+    "challenger_mode": "fixed_cot",
+    "challenger_temperature": 0.0,
+    "fixed_cot": "Think step by step. Write a clear chain of reasoning before the final answer. Double-check arithmetic and algebraic manipulations. Do not skip intermediate steps.",
+    "seed": 41,
+    "elapsed_sec": 952.2
+  },
+  "hintflow_one": {
+    "em": 0.43333333333333335,
+    "baseline_em": 0.36666666666666664,
+    "challenger_em": 0.43333333333333335,
+    "paired_delta": 0.06666666666666671,
+    "recovered": 4,
+    "harmed": 2,
+    "baseline_correct_retention": 0.8181818181818182,
+    "replace_count": 30,
+    "n_error": 0,
+    "sample_error": null
+  }
+}
