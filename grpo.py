@@ -10,6 +10,7 @@ def virtual_positive_grpo_advantages(
     rewards: list[float],
     *,
     eps: float = 1e-6,
+    all_wrong_mode: str = "vp",
 ) -> tuple[torch.Tensor, float, float, str]:
     """Standard GRPO advantages with explicit handling for degenerate groups.
 
@@ -19,6 +20,8 @@ def virtual_positive_grpo_advantages(
     virtual item never participates in backprop.  For K real zero rewards this
     gives every real completion advantage -1/sqrt(K).
     """
+    if all_wrong_mode not in {"vp", "off"}:
+        raise ValueError("all_wrong_mode must be vp or off")
     t = torch.tensor(rewards, dtype=torch.float32)
     if t.numel() == 0:
         return t, 0.0, 0.0, "empty"
@@ -28,6 +31,8 @@ def virtual_positive_grpo_advantages(
     if bool(torch.all(t >= 1.0 - eps)):
         return torch.zeros_like(t), mean_r, std_r, "all_correct"
     if bool(torch.all(t <= eps)):
+        if all_wrong_mode == "off":
+            return torch.zeros_like(t), mean_r, std_r, "all_wrong"
         augmented = torch.cat([t, torch.ones(1, dtype=t.dtype)])
         aug_mean = augmented.mean()
         aug_std = augmented.std(unbiased=False)

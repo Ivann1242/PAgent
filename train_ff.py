@@ -170,9 +170,19 @@ def train_ff(
     reference_adapter_dir: Path | None = None,
     checkpoint_every: int = 10,
     hf_repo: str | None = None,
+    all_wrong_mode: str = "vp",
+    resume_checkpoint: Path | None = None,
 ) -> Path:
     import json
     import os
+    import shutil
+
+    if all_wrong_mode not in {"vp", "off"}:
+        raise ValueError("all_wrong_mode must be vp or off")
+    if os.environ.get("PAGENT_PHYSICAL_GPU"):
+        from experiments.supplement.gpu import verify_worker
+        if gpu != verify_worker():
+            raise RuntimeError("Training GPU differs from the verified GPU UUID")
 
     os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu
@@ -190,8 +200,15 @@ def train_ff(
     rollout_log = Path(rollout_log or cfg.ff_rollout_log)
     adapter_dir.mkdir(parents=True, exist_ok=True)
     state_path = adapter_dir / "grpo_train_state.json"
-    if start_step > 1 and state_path.exists():
-        state = json.loads(state_path.read_text())
+    resume_root = Path(resume_checkpoint) if resume_checkpoint else adapter_dir
+    if start_step > 1:
+        state = json.loads((resume_root / "grpo_train_state.json").read_text())
+        if state["step"] != start_step - 1:
+            raise ValueError("Resume step does not match checkpoint")
+        if state.get("all_wrong_mode", "vp") != all_wrong_mode:
+            raise ValueError("Cannot resume a different all-wrong treatment")
+        if not (resume_root / "optimizer_state.pt").exists():
+            raise ValueError("Resume requires complete optimizer and RNG state")
         cursor = int(state.get("cursor", 0))
         print(f"resume from step={start_step} cursor={cursor}", flush=True)
     else:
@@ -260,8 +277,8 @@ def train_ff(
     )
     optimizer.zero_grad(set_to_none=True)
     optimizer_state_path = adapter_dir / "optimizer_state.pt"
-    if start_step > 1 and optimizer_state_path.exists():
-        saved = torch.load(optimizer_state_path, map_location=device, weights_only=False)
+    if start_step > 1:
+        saved = torch.load(resume_root / "optimizer_state.pt", map_location=device, weights_only=False)
         optimizer.load_state_dict(saved["optimizer"])
         if "python_rng" in saved:
             random.setstate(saved["python_rng"])
@@ -289,7 +306,9 @@ def train_ff(
             "reward_repeats": reward_repeats,
             "reward_max_tokens": reward_max_tokens,
             "reward_temperature": reward_temperature,
-            "advantage_method": "virtual_positive_grpo",
+            "advantage_method": "virtual_positive_grpo" if all_wrong_mode == "vp" else "standard_grpo",
+            "all_wrong_mode": all_wrong_mode,
+            "seed": seed,
             "reference_adapter": str(reference_adapter_dir),
             "kl_beta": KL_BETA,
         }
@@ -300,6 +319,22 @@ def train_ff(
             "torch_rng": torch.get_rng_state(),
             "cuda_rng": torch.cuda.get_rng_state(device) if device.type == "cuda" else None,
         }, optimizer_state_path)
+        # Publish immutable, complete snapshots; interrupted root writes are never
+        # used by the supplementary runner for resume. Snapshot contains RNG too.
+        if checkpoint_every > 0 and (step % checkpoint_every == 0 or step == max_steps):
+            snapshots = adapter_dir / "snapshots"
+            snapshots.mkdir(exist_ok=True)
+            destination = snapshots / f"step-{step:04d}"
+            temporary = snapshots / f".step-{step:04d}.tmp"
+            if not destination.exists():
+                if temporary.exists():
+                    shutil.rmtree(temporary)
+                temporary.mkdir()
+                for source in adapter_dir.iterdir():
+                    if source.is_file() and source.suffix in {".json", ".safetensors", ".bin", ".pt", ".model", ".jinja"}:
+                        shutil.copy2(source, temporary / source.name)
+                (temporary / "COMPLETE").write_text(str(step) + "\n")
+                temporary.rename(destination)
         if hf_repo and checkpoint_every > 0 and step % checkpoint_every == 0:
             from huggingface_hub import HfApi, create_repo
 
@@ -339,18 +374,24 @@ def train_ff(
                 flush=True,
             )
 
-    def _rollout_once(row: dict, hint: str, *, small_output: str = "") -> dict:
+    def _rollout_once(row: dict, hint: str, *, small_output: str = "", repeat_i: int = 0) -> dict:
+        import hashlib
+        feedback_seed = int.from_bytes(hashlib.sha256(
+            f"{seed}:{step}:{row['id']}:{repeat_i}".encode()
+        ).digest()[:4], "big") % (2**31)
         client = pool.next_client()
         r = rollout_ff(
             client, cfg.answer_model, row["problem"], row["gold"], hint,
             small_output=small_output,
             max_tokens=reward_max_tokens,
             temperature=reward_temperature,
+            seed=feedback_seed,
         )
         r["id"] = row["id"]
         r["reward_temperature"] = reward_temperature
         r["reward_max_tokens"] = reward_max_tokens
         r["reward_repeats"] = reward_repeats
+        r["feedback_seed"] = feedback_seed
         return r
 
     for step in range(start_step, max_steps + 1):
@@ -437,8 +478,10 @@ def train_ff(
             try:
                 r = _rollout_once(
                     job["row"], job["hint"], small_output=job["small_output"],
+                    repeat_i=rep_i,
                 )
                 compact = {
+                    "step": step, "seed": seed, "all_wrong_mode": all_wrong_mode,
                     "id": r["id"],
                     "repeat_i": rep_i,
                     "hint": job["hint"],
@@ -449,10 +492,12 @@ def train_ff(
                     "reward_temperature": reward_temperature,
                     "reward_max_tokens": reward_max_tokens,
                     "error": None,
+                    "trajectory": r,
                 }
                 return ukey, compact
             except Exception as exc:  # transient rollout failures are masked
                 return ukey, {
+                    "step": step, "seed": seed, "all_wrong_mode": all_wrong_mode,
                     "id": job["row"]["id"],
                     "repeat_i": rep_i,
                     "hint": job["hint"],
@@ -516,8 +561,16 @@ def train_ff(
             rewards = [item[3] for item in valid]
             ems = [item[4] for item in valid]
             advantages, mean_r, std_r, group_type = (
-                virtual_positive_grpo_advantages(rewards)
+                virtual_positive_grpo_advantages(rewards, all_wrong_mode=all_wrong_mode)
             )
+            append_jsonl(adapter_dir / "groups.jsonl", {
+                "step": step, "seed": seed, "all_wrong_mode": all_wrong_mode,
+                "id": row["id"], "k_requested": k, "k_valid": len(valid),
+                "rewards": rewards, "ems": ems, "group_type": group_type,
+                "advantages": advantages.tolist(),
+                "completions": [item[0] for item in valid],
+                "completion_tokens": [int(item[1].numel()) for item in valid],
+            })
             group_types[group_type] = group_types.get(group_type, 0) + 1
             total_groups += 1
             step_em += sum(ems) / len(ems) if ems else 0.0
@@ -547,6 +600,18 @@ def train_ff(
         _maybe_empty_cache(device)
         update_sec = time.monotonic() - update_t0
         step_sec = time.monotonic() - step_t0
+        append_jsonl(adapter_dir / "steps.jsonl", {
+            "step": step, "seed": seed, "all_wrong_mode": all_wrong_mode,
+            "group_types": group_types, "batch_size": batch_size, "k": k,
+            "logical_rollouts": batch_size * k * reward_repeats,
+            "unique_hints": n_unique_hints, "feedback_jobs": n_oss_calls,
+            "api_errors": sum(error_counts.values()),
+            "repeat_disagreements": repeat_disagreements,
+            "mean_em": step_em / batch_size,
+            "pg": step_pg / max(n_pg, 1), "kl": step_kl / max(n_pg, 1),
+            "clip": step_clip / max(n_pg, 1), "grad_norm": grad_norm,
+            "elapsed_sec": step_sec,
+        })
 
         print(
             f"step={step}/{max_steps} batch={batch_size} k={k} gen_batch={gen_batch_size} "

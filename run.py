@@ -162,6 +162,9 @@ def main() -> None:
                     help="parallel answerer requests per step (default: K)")
 
     sp = sub.add_parser("ff-train", help="Free-form prompt optimizer GRPO training")
+    sp.add_argument("--seed", type=int, default=42)
+    sp.add_argument("--all-wrong-mode", choices=["vp", "off"], default="vp")
+    sp.add_argument("--resume-checkpoint", default=None)
     sp.add_argument("--batch-size", type=int, default=64)
     sp.add_argument("--max-steps", type=int, default=10)
     sp.add_argument("--k", type=int, default=8)
@@ -363,6 +366,9 @@ def main() -> None:
             ),
             checkpoint_every=args.checkpoint_every,
             hf_repo=args.hf_repo,
+            seed=args.seed,
+            all_wrong_mode=args.all_wrong_mode,
+            resume_checkpoint=Path(args.resume_checkpoint) if args.resume_checkpoint else None,
         )
     elif args.cmd == "ff-merge":
         merge_ff(

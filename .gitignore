@@ -26,6 +26,8 @@ checkpoints/**/baselines.jsonl
 checkpoints/**/oracle_attempts.jsonl
 checkpoints/**/oracle_attempts.jsonl.corruptbak
 *.corruptbak
+checkpoints/supplement_*/
+experiments/supplement/config.local.json
 checkpoints/**/rollouts.jsonl
 checkpoints/blind_ff_grpo_rollouts.jsonl
 checkpoints/*_rollouts.jsonl
